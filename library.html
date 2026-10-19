@@ -1,0 +1,1066 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Fiery value proposition and proof library: products, partners and published customer results.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23D33641'/%3E%3C/svg%3E">
+<style>html{color-scheme:light}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Fiery Value Proposition Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500;1,600&display=swap">
+<style>
+/* Same system as the Fiery Sales Playbook and fiery.com: navy nav header with red-outlined action, gradient hero overlay card,
+   sticky search bar, centered section heads on alternating #F7F8FA bands, journey cards with offset L borders, red CTA band,
+   navy gradient footer. Colors, Exo 2, tagline and boilerplate from the Fiery Brand Book. */
+:root{
+  --fiery-red:#D33641; --fiery-navy:#132B75; --fiery-blue:#0074C5; --deep:#0E7AB8;
+  --lemon:#C7D522; --green:#5BAF76; --sky:#78BFDD; --orange:#ED7600; --gold:#E7B700; --magenta:#C84579; --purple:#6A2A7F;
+  --bg:#FFFFFF; --alt:#F7F8FA; --surface:#FFFFFF; --ink:#354358; --muted:#5B6880; --line:#E1E6EF;
+  --hdr:#132B75; --heading:#0E1D2C; --sec-head:#D33641; --link:#0067B0; --num:#D33641; --rule:#132B75;
+  --chip-bg:#EEF2F8; --chip-ink:#132B75;
+  --cost-bg:#E4F3E9; --cost-ink:#1F5E34; --time-bg:#E1F0F8; --time-ink:#0B4C78; --ease-bg:#FDEBD9; --ease-ink:#8A4300;
+  --proof-bg:#F3F6D0; --proof-ink:#424A00; --warn-bg:#FBE4E6; --warn-ink:#8E1D26;
+  --shadow:0 10px 40px rgba(14,29,44,.2); --shadow-sm:0 4px 20px rgba(14,29,44,.08);
+  --font-display:"Exo 2","Avenir Next LT Pro","Avenir Next",Avenir,system-ui,sans-serif;
+  --font-body:"Exo 2","Avenir Next LT Pro","Avenir Next",Avenir,system-ui,sans-serif;
+  --radius:10px; --hdr-h:72px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0A1230; --alt:#0D1739; --surface:#14204F; --ink:#D3DAEA; --muted:#A3AEC9; --line:#27356F;
+  --hdr:#0D1D5C; --heading:#FFFFFF; --sec-head:#FF8089; --link:#7CC3EC; --num:#FF8089; --rule:#78BFDD;
+  --chip-bg:#1C2A5E; --chip-ink:#DCE4FA;
+  --cost-bg:#16392A; --cost-ink:#A7E0BA; --time-bg:#123552; --time-ink:#A9D9F0; --ease-bg:#43280E; --ease-ink:#FFC48A;
+  --proof-bg:#36390C; --proof-ink:#E5EE7A; --warn-bg:#4A1C22; --warn-ink:#FFB3BA;
+  --shadow:0 10px 40px rgba(0,0,0,.45); --shadow-sm:0 4px 20px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A1230; --alt:#0D1739; --surface:#14204F; --ink:#D3DAEA; --muted:#A3AEC9; --line:#27356F;
+  --hdr:#0D1D5C; --heading:#FFFFFF; --sec-head:#FF8089; --link:#7CC3EC; --num:#FF8089; --rule:#78BFDD;
+  --chip-bg:#1C2A5E; --chip-ink:#DCE4FA;
+  --cost-bg:#16392A; --cost-ink:#A7E0BA; --time-bg:#123552; --time-ink:#A9D9F0; --ease-bg:#43280E; --ease-ink:#FFC48A;
+  --proof-bg:#36390C; --proof-ink:#E5EE7A; --warn-bg:#4A1C22; --warn-ink:#FFB3BA;
+  --shadow:0 10px 40px rgba(0,0,0,.45); --shadow-sm:0 4px 20px rgba(0,0,0,.35); color-scheme:dark}
+
+*{box-sizing:border-box}
+html{scroll-padding-top:calc(var(--hdr-h) + 170px)}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.6}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--hdr)}
+a{color:var(--link);text-underline-offset:3px}
+a:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--fiery-blue);outline-offset:2px}
+.wrap{max-width:1200px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--font-display);color:var(--heading);text-wrap:balance;margin:0;font-weight:600;line-height:1.2}
+h2{font-size:clamp(1.8rem,4vw,2.4rem)}
+h3{font-size:1.25rem}
+p{margin:0}
+.eyebrow{font-family:var(--font-display);font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--muted)}
+.sr{position:absolute;left:-9999px}
+.chev::after{content:"";display:inline-block;width:6px;height:6px;border-top:2px solid currentColor;border-right:2px solid currentColor;transform:rotate(45deg);margin-left:8px;margin-bottom:1px}
+.tagline{font-family:var(--font-display);font-style:italic;font-weight:600;font-size:1.1rem}
+
+/* Header (fiery.com nav) */
+header.site{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--hdr);color:#fff;box-shadow:0 2px 14px rgba(0,0,0,.18)}
+.hdr{display:flex;align-items:center;gap:8px 24px;padding-block:14px;flex-wrap:wrap}
+.brand{color:#fff;text-decoration:none;display:grid;line-height:1.15}
+.brand b{font-size:1.15rem;font-weight:700}
+.brand b span{box-shadow:inset 0 -3px 0 var(--fiery-red)}
+.brand small{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#C9D3F2;font-weight:500}
+.nav{display:flex;gap:2px;margin-left:auto;overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav a{flex:none;color:#fff;text-decoration:none;font-weight:500;padding:10px 12px;border-radius:6px;white-space:nowrap}
+.nav a:hover{background:rgba(255,255,255,.08)}
+.cta-out{flex:none;border:2px solid var(--fiery-red);color:#fff;font-weight:600;padding:9px 16px;border-radius:var(--radius);text-decoration:none;display:inline-flex;align-items:center}
+.cta-out:hover{background:var(--fiery-red)}
+@media (max-width:1060px){:root{--hdr-h:122px}.nav{order:3;width:100%;margin-left:-12px}.cta-out{margin-left:auto}}
+
+/* Hero (gradient overlay card) */
+.hero{position:relative;background:linear-gradient(120deg,#0B1A4F 0%,#132B75 45%,#0E3F8C 100%);overflow:hidden;color:#fff}
+.hero-art{position:absolute;left:0;top:0;bottom:0;width:55%;pointer-events:none}
+.hero-in{position:relative;display:flex;justify-content:flex-end;min-height:400px;align-items:center;padding-block:44px;padding-left:max(16px,env(safe-area-inset-left,0px))}
+.overlay{background:linear-gradient(to right,rgba(19,43,117,.86),rgba(14,122,184,.86));border-radius:30px 0 0 30px;padding:50px max(32px,calc((100vw - 1200px)/2 + 24px),env(safe-area-inset-right,0px)) 50px 60px;width:min(calc(700px + max(0px,(100vw - 1200px)/2)),100%);display:grid;gap:16px}
+.overlay .eyebrow{color:#C9D3F2}
+.overlay h1{color:#fff;font-size:clamp(2rem,5vw,3.1rem);font-weight:600;line-height:1.1}
+.overlay p.lede{color:#E6ECF9;font-size:1.05rem;max-width:58ch}
+.overlay .tagline span{box-shadow:inset 0 -4px 0 var(--fiery-red)}
+@media (max-width:820px){.hero-art{width:100%;opacity:.35}.hero-in{min-height:0;padding-block:28px}.overlay{padding:34px max(20px,env(safe-area-inset-right,0px)) 34px 26px;border-radius:24px 0 0 24px}}
+.btn{font-family:var(--font-display);font-weight:600;font-size:.95rem;border:2px solid var(--fiery-red);background:var(--fiery-red);color:#fff;padding:9px 18px;border-radius:var(--radius);text-decoration:none;display:inline-flex;align-items:center;cursor:pointer}
+.btn:hover{filter:brightness(.93)}
+.btn.white{background:#fff;border-color:#fff;color:var(--fiery-red)}
+.green-link{color:#7FD39A;text-transform:uppercase;letter-spacing:.06em;font-weight:700;font-size:.95rem;text-decoration:none;display:inline-flex;align-items:center}
+.hero-row{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center}
+
+/* Sticky search bar */
+.bar{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--hdr-h));z-index:10;background:var(--bg);border-bottom:1px solid var(--line);box-shadow:var(--shadow-sm)}
+@media (max-width:700px){.bar{position:static}html{scroll-padding-top:calc(var(--hdr-h) + 12px)}}
+.bar .wrap{padding-block:12px;display:grid;gap:10px}
+.searchrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+#q{flex:1 1 260px;min-width:0;font:inherit;padding:10px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-family:var(--font-display);font-size:.88rem;font-weight:600;border:2px solid var(--line);background:var(--surface);color:var(--ink);padding:5px 13px;border-radius:999px;cursor:pointer}
+.chip:hover{border-color:var(--fiery-red)}
+.chip[aria-pressed="true"]{background:var(--fiery-navy);border-color:var(--fiery-navy);color:#fff}
+:root[data-theme="dark"] .chip[aria-pressed="true"]{background:var(--fiery-red);border-color:var(--fiery-red)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .chip[aria-pressed="true"]{background:var(--fiery-red);border-color:var(--fiery-red)}}
+.lens-chip[data-lens="cost"][aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#0E2A17}
+.lens-chip[data-lens="time"][aria-pressed="true"]{background:var(--sky);border-color:var(--sky);color:#0B2B40}
+.lens-chip[data-lens="ease"][aria-pressed="true"]{background:var(--orange);border-color:var(--orange);color:#2B1500}
+.count{font-size:.86rem;color:var(--muted);font-variant-numeric:tabular-nums}
+@media (max-width:640px){#famchips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}#famchips .chip{white-space:nowrap}}
+
+/* Sections: centered heads, alternating light bands */
+main section{padding-block:60px}
+main section.alt{background:var(--alt);box-shadow:0 0 0 100vmax var(--alt);clip-path:inset(0 -100vmax)}
+.section-head{display:grid;gap:10px;margin:0 auto 34px;max-width:74ch;text-align:center;justify-items:center}
+.section-head p{color:var(--ink);font-size:1.05rem}
+
+/* Headline proof as journey cards */
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:34px 30px;padding:0 10px 10px 0}
+@media (max-width:900px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.stats{grid-template-columns:1fr}}
+.stat{--c:var(--gold);background:var(--surface);border-radius:var(--radius);padding:22px 24px;display:grid;gap:6px;align-content:start;text-decoration:none;color:var(--ink);box-shadow:10px 10px 0 0 var(--c),var(--shadow-sm);transition:transform .15s}
+.stat:nth-child(3n+2){--c:var(--fiery-blue)} .stat:nth-child(3n){--c:var(--magenta)}
+.stat:hover{transform:translateY(-3px)}
+.stat .big{font-family:var(--font-display);font-weight:700;font-size:2.2rem;line-height:1.05;color:var(--num);font-variant-numeric:tabular-nums}
+.stat .what{font-weight:600;color:var(--heading)}
+.stat .who{font-size:.88rem;color:var(--muted)}
+.stat .who::after{content:"See the proof";display:block;margin-top:8px;color:var(--link);font-weight:600}
+
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+.legend div{background:var(--surface);border-radius:var(--radius);padding:18px 20px;display:grid;gap:8px;align-content:start;box-shadow:var(--shadow-sm)}
+.lens-tag{font-family:var(--font-display);font-weight:700;font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:4px;justify-self:start}
+.t-cost{background:var(--cost-bg);color:var(--cost-ink)} .t-time{background:var(--time-bg);color:var(--time-ink)} .t-ease{background:var(--ease-bg);color:var(--ease-ink)}
+
+/* Product cards */
+.family-h{margin:40px 0 14px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;padding-bottom:10px;border-bottom:3px solid var(--rule)}
+.family-h h3{font-size:1.4rem;color:var(--sec-head)}
+.family-h .count{margin-left:auto}
+.cards{display:grid;gap:22px;grid-template-columns:minmax(0,1fr)}
+.card{background:var(--surface);border-radius:var(--radius);padding:24px;display:grid;grid-template-columns:minmax(0,1fr);gap:14px;min-width:0;box-shadow:var(--shadow-sm)}
+.card-top{display:flex;gap:10px 16px;flex-wrap:wrap;align-items:baseline;justify-content:space-between}
+.card-top h4{font-family:var(--font-display);font-size:1.3rem;font-weight:600;color:var(--heading);margin:0}
+.pill{font-family:var(--font-display);font-size:.78rem;font-weight:600;background:var(--chip-bg);color:var(--chip-ink);padding:3px 10px;border-radius:999px;white-space:nowrap}
+.pill.new{background:var(--fiery-red);color:#fff}
+.card-top .pill{white-space:normal;max-width:100%}
+.what{max-width:82ch}
+.meta{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:.93rem}
+.meta dt{font-family:var(--font-display);font-weight:600;color:var(--muted)}
+.meta dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.lenses{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:820px){.lenses{grid-template-columns:1fr}}
+.lens{border-radius:var(--radius);padding:14px 16px;display:grid;gap:8px;align-content:start;border:2px solid transparent}
+.lens.cost{background:var(--cost-bg)} .lens.time{background:var(--time-bg)} .lens.ease{background:var(--ease-bg)}
+.lens h5{font-family:var(--font-display);margin:0;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase}
+.lens.cost h5{color:var(--cost-ink)} .lens.time h5{color:var(--time-ink)} .lens.ease h5{color:var(--ease-ink)}
+.lens ul{margin:0;padding-left:1.1em;display:grid;gap:5px;font-size:.94rem;color:var(--ink)}
+.lens.dim{opacity:.35}
+.lens.focus{border-color:var(--heading)}
+.proofs{display:flex;flex-wrap:wrap;gap:8px}
+.proof{font-size:.87rem;background:var(--proof-bg);color:var(--proof-ink);padding:5px 10px;border-radius:6px}
+.proof b{font-family:var(--font-display);font-weight:700}
+.proof.legacy{background:var(--warn-bg);color:var(--warn-ink)}
+.proven{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline;font-size:.92rem}
+.proven .lbl2{font-family:var(--font-display);font-weight:700;color:var(--muted);font-size:.78rem;letter-spacing:.1em;text-transform:uppercase}
+.proven a{font-weight:600}
+.pitch{display:flex;gap:12px;align-items:flex-start;border-top:1px solid var(--line);padding-top:14px;flex-wrap:wrap}
+.pitch q{flex:1 1 300px;min-width:0;font-family:var(--font-display);font-style:italic;font-weight:600;color:var(--heading);quotes:none}
+.pitch .lbl{font-family:var(--font-display);font-weight:700;color:var(--sec-head);font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;padding-top:3px}
+button.copy{font-family:var(--font-display);font-size:.84rem;font-weight:600;border:2px solid var(--fiery-red);background:transparent;color:var(--heading);padding:5px 12px;border-radius:var(--radius);cursor:pointer}
+button.copy:hover{background:var(--fiery-red);color:#fff}
+details.src summary{cursor:pointer;font-size:.86rem;color:var(--muted)}
+details.src ul{margin:8px 0 0;padding-left:1.1em;font-size:.86rem;display:grid;gap:3px;word-break:break-word}
+.empty{padding:24px;border:2px dashed var(--line);border-radius:var(--radius);color:var(--muted)}
+
+/* Proof library: journey cards, border color by proof type */
+.proof-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;justify-content:center}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:30px 28px;padding:10px 10px 10px 0}
+@media (max-width:400px){.pgrid{grid-template-columns:1fr}}
+.pcard{--c:var(--fiery-blue);background:var(--surface);border-radius:var(--radius);padding:22px;display:grid;grid-template-columns:minmax(0,1fr);gap:10px;align-content:start;min-width:0;box-shadow:8px 8px 0 0 var(--c),var(--shadow-sm)}
+.pcard.k-paper{--c:var(--magenta)} .pcard.k-research{--c:var(--gold)} .pcard.k-award{--c:var(--green)}
+.pcard:target{outline:3px solid var(--fiery-red);outline-offset:3px}
+.pcard .tags{display:flex;gap:6px;flex-wrap:wrap}
+.pcard h4{font-family:var(--font-display);font-size:1.2rem;font-weight:700;margin:0;color:var(--heading)}
+.pcard .loc{font-size:.86rem;color:var(--muted);margin-top:-4px}
+.pcard .head{font-family:var(--font-display);font-weight:700;font-size:1.15rem;color:var(--num);line-height:1.3}
+.pcard ul{margin:0;padding-left:1.1em;display:grid;gap:4px;font-size:.93rem}
+.pcard .prods{font-size:.86rem;color:var(--muted)}
+.pcard p:last-child a{font-weight:600;text-decoration:none}
+.pcard p:last-child a::after{content:"";display:inline-block;width:6px;height:6px;border-top:2px solid currentColor;border-right:2px solid currentColor;transform:rotate(45deg);margin-left:8px;margin-bottom:1px}
+.tag{font-family:var(--font-display);font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:4px;background:var(--chip-bg);color:var(--chip-ink)}
+.tag.era{background:var(--warn-bg);color:var(--warn-ink)}
+.tag.am{background:var(--fiery-navy);color:#fff}
+.tag.recent{background:var(--proof-bg);color:var(--proof-ink)}
+
+/* Tables & panels */
+.tbl{overflow-x:auto;border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow-sm)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:.94rem}
+th,td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--font-display);font-weight:600;color:#fff;background:linear-gradient(90deg,#132B75,#0E7AB8)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-family:var(--font-display);font-weight:600;white-space:nowrap;color:var(--heading)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px}
+.panel{background:var(--surface);border-radius:var(--radius);padding:22px;display:grid;grid-template-columns:minmax(0,1fr);gap:10px;align-content:start;min-width:0;box-shadow:var(--shadow-sm);border-top:5px solid var(--c,var(--rule))}
+.panel h4{font-family:var(--font-display);margin:0;font-size:1.12rem;font-weight:600;color:var(--heading)}
+.panel ul,.panel ol{margin:0;padding-left:1.2em;display:grid;gap:6px}
+.note{background:var(--warn-bg);color:var(--warn-ink);--c:var(--fiery-red)}
+.boiler{font-size:.96rem;max-width:80ch}
+h3.sub{color:var(--sec-head);margin-bottom:14px}
+
+/* CTA band and footer */
+.cta-red{background:var(--fiery-red);color:#fff;padding-block:50px;text-align:center}
+.cta-red h2{color:#fff;font-size:clamp(1.7rem,4vw,2.3rem)}
+.cta-red p{margin:10px auto 22px;max-width:58ch;font-size:1.05rem}
+footer.site-foot{background:linear-gradient(90deg,#132B75,#0E7AB8);color:#fff}
+.foot-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr);gap:32px;padding-block:50px 38px}
+@media (max-width:820px){.foot-grid{grid-template-columns:1fr}}
+.foot-brand{font-size:1.3rem;font-weight:700}
+.foot-grid p{color:#E6ECF9;font-size:.95rem;max-width:60ch}
+.foot-h{color:#fff;font-size:1.05rem;font-weight:600;padding-bottom:10px;position:relative;margin-bottom:14px}
+.foot-h::after{content:"";position:absolute;left:0;bottom:0;width:44px;height:3px;border-radius:2px;background:var(--c,var(--fiery-red))}
+.foot-grid ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.foot-grid ul a{color:#fff;text-decoration:none;font-size:.95rem}
+.foot-grid ul a:hover{text-decoration:underline}
+.foot-bar{border-top:1px solid rgba(255,255,255,.2);padding-block:16px;font-size:.85rem;color:#DCE5F8}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+@media (prefers-reduced-motion:reduce){.stat{transition:none}.stat:hover{transform:none}}
+</style>
+</head>
+<body>
+<style>
+.fsite{background:#0b1a4a;border-bottom:3px solid #D33641;font-family:"Exo 2","Avenir Next LT Pro","Avenir Next",system-ui,sans-serif;position:relative;z-index:50}
+.fsite-in{max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap;padding-block:8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.fsite-b{color:#fff;font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin-right:auto}
+.fsite-b em{color:#ff8a92;font-style:italic;font-weight:600;text-transform:none;letter-spacing:0;margin-left:8px}
+.fsite nav{display:flex;gap:4px;flex-wrap:wrap}
+.fsite nav a{color:#dfe6ff;text-decoration:none;font-size:13px;font-weight:600;padding:6px 10px;border-radius:4px}
+.fsite nav a:hover{background:rgba(255,255,255,.1);color:#fff}
+.fsite nav a[aria-current]{background:#D33641;color:#fff}
+</style>
+<div class="fsite"><div class="fsite-in"><span class="fsite-b">Fiery value selling<em>see the difference</em></span><nav aria-label="Site"><a href="index.html">Value Selling Playbooks</a><a href="sales-playbook.html">Sales Playbook</a><a href="library.html" aria-current="page">Proof Library</a><a href="videos.html">Videos</a></nav></div></div>
+
+
+<header class="site">
+  <div class="wrap hdr">
+    <a class="brand" href="#top"><b><span>Fiery</span> Value Library</b><small>OEM channel · Americas</small></a>
+    <nav class="nav" aria-label="Library sections"><a href="#headlines">Headline proof</a><a href="#products">Products</a><a href="#proof">Proof library</a><a href="#playbook">Dealer playbook</a><a href="#partners">Partners</a><a href="#company">Company</a></nav>
+    <a class="cta-out chev" href="sales-playbook.html">Sales Playbook</a>
+  </div>
+</header>
+
+<div class="hero" id="top">
+  <svg class="hero-art" viewBox="0 0 700 460" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <g opacity=".9">
+      <rect x="70" y="90" width="300" height="210" rx="10" transform="rotate(-12 220 195)" fill="#6A2A7F"/>
+      <rect x="130" y="130" width="300" height="210" rx="10" transform="rotate(-6 280 235)" fill="#0074C5"/>
+      <rect x="190" y="170" width="300" height="210" rx="10" transform="rotate(-1 340 275)" fill="#78BFDD"/>
+      <rect x="250" y="210" width="300" height="210" rx="10" transform="rotate(4 400 315)" fill="#D33641"/>
+    </g>
+    <g fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="2"><circle cx="150" cy="380" r="70"/><circle cx="150" cy="380" r="110"/></g>
+  </svg>
+  <div class="hero-in">
+    <div class="overlay">
+      <p class="eyebrow">OEM Channel Marketing · Americas · Updated Oct 15, 2026</p>
+      <h1>Fiery Value Proposition Library</h1>
+      <p class="lede">Every Fiery product, framed through the three questions dealers and OEM sales teams hear most: what does it save, how much time does it give back, and how easy is it to adopt. Each claim links to the case study, white paper, research or award that proves it.</p>
+      <div class="hero-row"><a class="btn chev" href="#products">Browse products</a><a class="green-link chev" href="#proof">See the proof</a></div>
+      <p class="tagline"><span>see the difference</span></p>
+    </div>
+  </div>
+</div>
+
+<div class="bar" role="search">
+  <div class="wrap">
+    <div class="searchrow">
+      <label for="q" class="sr">Search products and proof</label>
+      <input id="q" type="search" placeholder="Search a product, customer, partner or result (e.g. JobFlow, Xerox, training)">
+      <span class="count" id="count"></span>
+    </div>
+    <div class="chips" id="famchips" aria-label="Filter products by family"></div>
+    <div class="chips" aria-label="Highlight a value lens">
+      <button class="chip lens-chip" data-lens="cost" aria-pressed="false" type="button">Cost savings</button>
+      <button class="chip lens-chip" data-lens="time" aria-pressed="false" type="button">Time savings</button>
+      <button class="chip lens-chip" data-lens="ease" aria-pressed="false" type="button">Ease of use</button>
+    </div>
+  </div>
+</div>
+
+<main>
+  <section class="wrap" id="headlines">
+    <div class="section-head">
+      <div class="eyebrow">Headline proof · Americas customers</div>
+      <h2>Lead with these six results</h2>
+      <p>Named North American customers, all published under the Fiery name since its 2023 independence. Select one to open its full proof card.</p>
+    </div>
+    <div class="stats" id="stats"></div>
+  </section>
+
+  <section class="wrap" id="how" style="padding-top:0">
+    <div class="legend">
+      <div><span class="lens-tag t-cost">Cost savings</span><p>Less waste, fewer reprints, lower consumables, avoided software or labor spend.</p></div>
+      <div><span class="lens-tag t-time">Time savings</span><p>Fewer touches and clicks, faster setup, RIP and recovery, more jobs per shift.</p></div>
+      <div><span class="lens-tag t-ease">Ease of use</span><p>Shorter learning curve, one interface, automation that lets newer operators run work correctly.</p></div>
+      <div><span class="lens-tag" style="background:var(--proof-bg);color:var(--proof-ink)">Proof standard</span><p><b>Customer result</b>, <b>Fiery figure</b> and <b>Industry research</b> are ready to use. <b>Revalidate</b> and <b>EFI era</b> items are older or “up to” claims; confirm with product marketing before external use.</p></div>
+    </div>
+  </section>
+
+  <section class="wrap alt" id="products">
+    <div class="section-head">
+      <div class="eyebrow">Product value propositions</div>
+      <h2>Portfolio by family</h2>
+      <p>Each card ends with “Proven by” links that jump to the matching case study, white paper or award below.</p>
+    </div>
+    <div id="library"></div>
+  </section>
+
+  <section class="wrap" id="proof">
+    <div class="section-head">
+      <div class="eyebrow">Proof library</div>
+      <h2>Case studies, white papers, research and awards</h2>
+      <p>Every entry links to the original document. The search box and lens buttons above filter this list too.</p>
+    </div>
+    <div class="proof-filters" id="ptypes" aria-label="Filter proof by type"></div>
+    <div class="proof-filters" aria-label="Filter proof by region and age">
+      <button class="chip" type="button" id="amOnly" aria-pressed="false">Americas customers only</button>
+      <button class="chip" type="button" id="recentOnly" aria-pressed="false">Fiery era only (2023+)</button>
+      <span class="count" id="pcount" style="align-self:center"></span>
+    </div>
+    <div class="pgrid" id="pgrid"></div>
+  </section>
+
+  <section class="wrap alt" id="playbook">
+    <div class="section-head">
+      <div class="eyebrow">Channel playbook</div>
+      <h2>How a top dealer sells Fiery</h2>
+      <p>Copiers Northwest, a 12-location Pacific Northwest dealer, documented the approach that makes Fiery a reason to buy from them. Use it in dealer enablement.</p>
+    </div>
+    <div class="grid2">
+      <div class="panel"><h4>What they sell</h4><ul><li>Four Fiery strengths: job management, color management, ease of use and processing power</li><li>Fiery on monochrome engines too, using presets and one interface</li><li>Multi-brand management, so customers run different OEMs from one place</li><li>G7 testing for certification and ongoing quality checks</li></ul></div>
+      <div class="panel"><h4>How they sell it</h4><ul><li>On-site needs analysis before the sale</li><li>Quantify time: about 10 minutes saved per repeat job across 5,000–7,000 jobs a year, close to one full-time salary</li><li>Train customers to be self-sufficient with Fiery online learning</li><li>Stay close to Fiery engineering through monthly calls</li></ul></div>
+      <div class="panel"><h4>Talk track for Americas OEM partners</h4><ol><li>Open with the labor problem: training time and touches per job.</li><li>Show a matching Americas proof card (iOffice, Monarch, AlphaGraphics).</li><li>Start free: Command WorkStation, JobFlow Base, FreeForm Create, Fiery IQ.</li><li>Upsell the paid step: JobFlow or JobFlow Pro, Impose, ColorGuard.</li><li>Close with a 30-day trial and the matching ROI calculator.</li></ol></div>
+    </div>
+  </section>
+
+  <section class="wrap" id="partners">
+    <div class="section-head">
+      <div class="eyebrow">Ecosystem</div>
+      <h2>Who Fiery partners with</h2>
+      <p>Fiery builds DFEs tuned to each OEM engine and connects them to the prepress, finishing, MIS and measurement tools a shop already owns. That neutrality is the core channel message.</p>
+    </div>
+    <h3 class="sub">OEM DFE partners</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>OEM</th><th>What Fiery powers</th><th>Proof point to use</th></tr></thead>
+      <tbody>
+        <tr><td>Konica Minolta</td><td>Fiery IC-series DFEs for AccurioPress and AccurioPrint</td><td>IC-321 / IC-421 on FS700 Pro for AccurioPress C5080 series (Jul 2026) with IQ-601 zero-touch recalibration. Colortech (PA) and Central Dauphin SD (PA) run Fiery-driven KM presses.</td></tr>
+        <tr><td>Xerox</td><td>Fiery DFEs across the Xerox production line</td><td>FS700X Pro for Proficio PX500 / PX300 (May 2026) with Smart Estimator. REAL Marketing, Arlington County and Studio Blue run Fiery-driven Xerox presses.</td></tr>
+        <tr><td>FUJIFILM</td><td>Fiery DFEs for Revoria presses</td><td>Fiery DFE for Revoria Press PC2120 (Jun 2026); four Revoria DFEs launched Dec 2024.</td></tr>
+        <tr><td>Canon</td><td>imagePRESS Server (Fiery) family</td><td>ColorGuard Automatic Color Control on imagePRESS V700–V1350. International Minute Press (PA) runs Fiery-driven imagePRESS.</td></tr>
+        <tr><td>Ricoh</td><td>Fiery E-series DFEs for Pro C presses</td><td>San Joaquin Delta College runs four Fiery-driven Ricoh presses with 4–6 hour order turnaround.</td></tr>
+        <tr><td>Kyocera</td><td>Fiery Printing System DFEs</td><td>Central Dauphin SD runs a Fiery-driven Kyocera TASKalfa 7054ci alongside KM presses.</td></tr>
+        <tr><td>Sharp, Riso</td><td>Fiery DFEs for production color and inkjet lines</td><td>Listed as Fiery DFE partners on fiery.com; collect 2026 model news from partner managers.</td></tr>
+        <tr><td>Landa</td><td>Fiery-based DFE for Nanographic presses</td><td>First FograCert VPS certification with the Landa S10 (2019).</td></tr>
+        <tr><td>EFI</td><td>Fiery XF, proServer and IQ for EFI printers</td><td>HPI (Houston) halved processing time on EFI VUTEk with Fiery proServer.</td></tr>
+        <tr><td>Epson</td><td>Parent company since Dec 2024</td><td>Fiery runs independently under its own name inside the Epson group.</td></tr>
+      </tbody>
+    </table></div>
+    <p class="count" style="margin-top:8px">Also shown as supported printer brands on fiery.com: Brother, Colordyne, HP, Komori, Mimaki, Mutoh, OKI, Polyprint and Roland. Industrial partner Atexco integrates Fiery Impress (Gomaq, Brazil).</p>
+
+    <div class="grid2" style="margin-top:24px">
+      <div class="panel"><h4>Fiery Partner Network (dealers)</h4>
+        <ul><li><b>Cutsheet Printing</b> partners</li><li><b>Large Format Printing</b> with a Premier Partner tier</li><li><b>Specialty Production</b> for textiles, labels, packaging and specialty media</li><li>Partners complete training and certification every year</li><li>Partner Portal, Dealer Locator and Fiery Shop support the channel</li></ul></div>
+      <div class="panel"><h4>Technology partners</h4>
+        <ul><li><b>Esko</b>: Esko Color Engine fully integrated in Fiery Impress</li><li><b>Global Inkjet Systems</b>: printhead control with Fiery Impress</li><li><b>Enfocus</b>: PitStop preflight inside Fiery JobFlow</li><li><b>callas</b>: pdfToolbox inside Fiery JobFlow Pro</li><li><b>Adobe</b>: PDF Print Engine in FS700 Pro</li><li><b>Pantone</b>: updated libraries in FS700 Pro</li></ul></div>
+      <div class="panel"><h4>Finishing integrations</h4>
+        <ul><li>Duplo, Horizon, Plockmatic, Uchida, Morgana, MBM, Graphic Whizard, Ausjetech</li><li>Konica Minolta TU-510 via Fiery Finishing Designer</li><li>Proven at AlphaGraphics Lake Mary (Duplo) and iOffice (MBM)</li></ul></div>
+      <div class="panel"><h4>MIS, web-to-print and measurement</h4>
+        <ul><li><b>ePS</b>: MarketDirect StoreFront, Pace, PrintSmith Vision, PrintFlow via Fiery JDF</li><li><b>PageDNA</b>: storefront-to-Command WorkStation integration (Sep 2026)</li><li><b>Measurement</b>: Fiery ES-series, X-Rite, Konica Minolta, Barbieri, Techkon, Epson</li></ul></div>
+    </div>
+  </section>
+
+  <section class="wrap alt" id="company">
+    <div class="section-head">
+      <div class="eyebrow">Company context</div>
+      <h2>Fiery at a glance</h2>
+    </div>
+    <div class="grid2">
+      <div class="panel"><h4>Approved boilerplate (88 words)</h4>
+        <p class="boiler">Fiery, LLC is a leading provider of digital front ends (DFEs) and workflow solutions for industrial and graphic arts print industries. With over 2 million DFEs sold globally, our innovative software and cloud-based technologies deliver stunning color and exceptional print quality on a broad range of production printing devices. Our customer base includes commercial print, packaging, signs and display graphics, ceramics, building materials, textiles and other specialty applications. With over 30 years of excellent support and service, Fiery has built an unmatched community of customers and partners.</p>
+        <p class="count">Source: Fiery Brand Book, p.27. Use the longest version that fits.</p></div>
+      <div class="panel"><h4>Milestones that shape the story</h4>
+        <ul>
+          <li>2022: acquired CADlink, now Fiery Specialty Production (Ottawa)</li>
+          <li>2023: separated from EFI as an independent company</li>
+          <li>Dec 2024: acquired by Seiko Epson; keeps its name and structure</li>
+          <li>Jan 2026: completed acquisition of Inèdit Software (textile RIPs)</li>
+          <li>Jun 2026: Micah Kornberg named CEO, succeeding Toby Weiss</li>
+          <li>Pinnacle Awards: 2 in 2024, 3 in 2025, 1 in 2026</li>
+        </ul></div>
+      <div class="panel note"><h4 style="color:inherit">Correction to the earlier project primer</h4>
+        <p>The September primer listed Siris Capital as owner and Toby Weiss as CEO. Epson has owned Fiery since December 2024, and Micah Kornberg has been CEO since June 29, 2026. The primer is now updated.</p></div>
+    </div>
+  </section>
+
+  <section class="wrap" id="gaps">
+    <div class="section-head">
+      <div class="eyebrow">Next to build</div>
+      <h2>Proof gaps to close</h2>
+    </div>
+    <div class="grid2">
+      <div class="panel"><h4>Thin on proof</h4><p>Most quantified stories are JobFlow and Impose. ColorGuard has one number (Colortech). JobFlow Pro, Scribe, XF 9, Digital Factory, SignLab and the Inèdit suite have no published customer metrics yet.</p></div>
+      <div class="panel"><h4>Ask Fiery product marketing for</h4><ul><li>Americas customer metrics for JobFlow Pro, Scribe and ColorGuard</li><li>Refreshed versions of strong EFI-era stories (HPI, Arlington, Snap)</li><li>The full InfoTrends Workflow ROI and Keypoint 2019 studies cited in brochures</li><li>Partner-only ROI calculators and dealer pricing</li></ul></div>
+      <div class="panel"><h4>Not yet profiled</h4><p>Fiery Go, Direct Mobile Printing, Fiery Drivers, Image Enhance Visual Editor, ES-series spectrophotometers, IQ for EFI printers, JobFlow for Large Format, and individual Inèdit products.</p></div>
+    </div>
+  </section>
+</main>
+
+<section class="cta-red">
+  <div class="wrap">
+    <h2>Turn this proof into a customer conversation</h2>
+    <p>The Sales Playbook turns these results into value stories, objection answers, ROI estimates and call plans for every product.</p>
+    <a class="btn white chev" href="sales-playbook.html">Open the Sales Playbook</a>
+  </div>
+</section>
+
+<footer class="site-foot">
+  <div class="wrap foot-grid">
+    <div style="display:grid;gap:12px">
+      <p class="foot-brand">Fiery Value Proposition Library</p>
+      <p>Fiery, LLC is a leading provider of digital front ends (DFEs) and workflow solutions for industrial and graphic arts print industries. With over 2 million DFEs sold globally, our innovative software and cloud-based technologies deliver stunning color and exceptional print quality on a broad range of production printing devices.</p>
+      <p class="tagline" style="color:#fff">see the difference</p>
+    </div>
+    <div><h3 class="foot-h" style="--c:var(--fiery-red)">Library</h3><ul>
+      <li><a href="#headlines">Headline proof</a></li><li><a href="#products">Products</a></li><li><a href="#proof">Proof library</a></li><li><a href="#playbook">Dealer playbook</a></li><li><a href="#partners">Partners</a></li><li><a href="#company">Company</a></li></ul></div>
+    <div><h3 class="foot-h" style="--c:var(--sky)">Resources</h3><ul>
+      <li><a href="sales-playbook.html">Fiery Sales Playbook</a></li>
+      <li><a href="https://www.fiery.com/" target="_blank" rel="noopener">fiery.com</a></li>
+      <li><a href="https://shop.fiery.com/" target="_blank" rel="noopener">Fiery Shop</a></li>
+      <li><a href="https://help.fiery.com/" target="_blank" rel="noopener">Fiery Help</a></li></ul></div>
+  </div>
+  <div class="foot-bar"><div class="wrap">Internal working library for Fiery OEM channel marketing, Americas. Results are as reported in each linked publication; vendor-published case studies and sponsored articles are labeled as such. Validate before external use. Fiery and product names are trademarks of Fiery, LLC.</div></div>
+</footer>
+
+<script>
+const FAMILIES=[
+ {id:"platform",name:"DFE platform & job management"},
+ {id:"makeready",name:"Makeready"},
+ {id:"automation",name:"Automation & AI"},
+ {id:"color",name:"Color & imaging"},
+ {id:"cloud",name:"Fiery IQ cloud"},
+ {id:"vdp",name:"Variable data"},
+ {id:"lf",name:"Large format"},
+ {id:"industrial",name:"Industrial inkjet"},
+ {id:"specialty",name:"Specialty & textile"},
+ {id:"integration",name:"Integration"}
+];
+const S={
+ home:"https://www.fiery.com/",
+ fs700:"https://www.fiery.com/kb/fs700pro-whats-new/",
+ fs700pr:"https://www.piworld.com/article/fiery-launches-fiery-fs700-pro-software/",
+ secwp:"https://help.fiery.com/Security/en-us/45266125_Fiery_Security_WhitePaper_FS700_en-us.pdf",
+ xerox:"https://www.printmonthly.co.uk/news/software/fiery-launches-new-dfe-for-xerox-proficio-series/",
+ km:"https://docs.google.com/document/d/1hMZ3fs_CWBFaOKPKLdZNe0d6C0VJHtTG/export?format=pdf",
+ cws:"https://www.fiery.com/products/cutsheet/job-management/fiery-command-workstation/",
+ cws7:"https://www.piworld.com/article/next-generation-of-fiery-command-workstation-unveiled/",
+ hot:"https://www.fiery.com/hotfolders",
+ hotshop:"https://shop.fiery.com/product/hot-folders-virtual-printers/",
+ central:"https://help.fiery.com/cws_cs/7.1/en-us/GUID-F23D9DB1-1145-48E7-B770-3695D86FECD8.html",
+ centralbr:"https://www.fiery.com/wp-content/uploads/sites/3/documents/454/efi_fiery_central_br_en_uk.pdf",
+ imposeshop:"https://shop.fiery.com/product/impose/",
+ icshop:"https://shop.fiery.com/product/impose-compose/",
+ imposeqq:"https://www.fiery.com/wp-content/uploads/sites/3/documents/317/efi_fiery_impose_qq_ds_en_us.pdf",
+ tu510:"https://www.fiery.com/wp-content/uploads/sites/3/2023/09/fiery_integration_km_tu510_ff.pdf",
+ jm:"https://www.fiery.com/products/cutsheet/jobmaster/",
+ jf:"https://www.fiery.com/products/automation/fiery-jobflow/",
+ jfdg:"https://www.fiery.com/wp-content/uploads/sites/3/documents/2904/efi_fiery_jobflow_dg_br_zh_cn.pdf",
+ jfp:"https://www.fiery.com/products/automation/fiery-jobflow-pro/",
+ jfpbr:"https://www.fiery.com/wp-content/uploads/sites/3/2026/01/fiery_jobflowpro_br.pdf",
+ jfppw:"https://www.printweek.com/content/product-news/fiery-launches-ai-assisted-workflow-platform",
+ je:"https://www.fiery.com/jobexpert",
+ fap:"https://www.fiery.com/wp-content/uploads/sites/3/2023/10/fiery_automation_ds_en_us.pdf",
+ scribe:"https://www.fiery.com/products/cutsheet/cloud-applications/fiery-scribe/",
+ scribefaq:"https://www.fiery.com/wp-content/uploads/sites/3/2025/11/fiery_scribe_faq_0826_en_us.pdf",
+ scribepm:"https://www.printmonthly.co.uk/news/software/fiery-launches-ai-powered-prepress-assistant-fiery-scribe/",
+ cpsshop:"https://shop.fiery.com/product/color-profiler-suite/",
+ cpsg7:"https://www.piworld.com/post/calibrate-and-verify-g7-grayscale-compliance-with-fiery-color-profiler-suite",
+ edge:"https://www.fiery.com/products/fiery-edge/",
+ gapro:"https://efi.com/gapro",
+ gaprobr:"https://www.fiery.com/wp-content/uploads/sites/3/documents/2203/efi_fiery_gapro_bro_en_us.pdf",
+ spotpro:"https://www.fiery.com/wp-content/uploads/sites/3/2023/10/fiery_spotpro_br_en_us.pdf",
+ cr:"https://www.fiery.com/en-gb/products/cutsheet/fiery-colorright-package/",
+ cg:"https://www.fiery.com/products/color-imaging/fiery-colorguard/",
+ cgbr:"https://www.fiery.com/wp-content/uploads/sites/3/2023/10/fiery_colorguard_br_en_us.pdf",
+ smartest:"https://download.support.xerox.com/pub/docs/800_1000_DCP/userdocs/any-os/en/Fiery_Smart_Estimator_ColorPress_DS_PRINT_US.pdf",
+ pin24:"https://www.piworld.com/article/fiery-dfe-innovations-win-2024-pinnacle-product-awards/",
+ ffc:"https://www.fiery.com/products/cutsheet/fiery-freeform-create/",
+ ffcpr:"https://www.printing.org/content/2026/01/29/fiery-freeform-create-2.0-sets-new-bar-for-print-personalization",
+ iq:"https://www.fiery.com/products/automation/fiery-iq/",
+ manage:"https://www.fiery.com/products/cutsheet/cloud-applications/fiery-manage/",
+ vue:"https://www.fiery.com/products/cutsheet/job-management/fiery-vue/",
+ xf9:"https://www.printing.org/content/2026/01/15/fiery-xf-9-unlocks-new-ways-to-produce-high-value-large-format-print",
+ xfrp:"https://www.rpimaging.com/products/efi-fiery-xf",
+ prepit:"https://www.fiery.com/products/large-format/fiery-prep-it",
+ prepitbr:"https://www.fiery.com/wp-content/uploads/sites/3/2023/10/fiery_prepit_brochure_en_uk.pdf",
+ prepitshop:"https://shop.fiery.com/product/fiery-prep-it/",
+ prepit2012:"https://wideformatimage.com.au/?p=23827",
+ esko:"https://www.labelsandlabeling.com/news/workflow-mis-inspection/esko-integrates-esko-color-engine-fiery-impress",
+ wttimpress:"https://whattheythink.com/articles/123178-unlocking-potential-industrial-printing-fiery/",
+ df12:"https://www.printing.org/content/2025/12/04/digital-factory-12-brings-professional-grade-color---workflow-technology-to-dtf-printing",
+ df12b:"https://imagemagazine.co.nz/latest-news/fiery-releases-digital-factory-12-rip-for-dtf/",
+ signlab:"https://wideformatimage.com.au/?p=28691",
+ engrave:"https://www.fiery.com/products/specialty-production/engravelab/",
+ spec:"https://www.fiery.com/specialty-production/",
+ inedit:"https://www.thecannatareport.com/fiery-acquires-inedit-software/",
+ finish:"https://www.fiery.com/products/finishing-equipment/",
+ mis:"https://www.fiery.com/products/cutsheet/mis-w2p/",
+ pagedna:"https://www.zoominfo.com/c/fiery-llc/1334536586"
+};
+
+/* Proof library. type: case | paper | research | award */
+const PR=[
+ {id:"monarch",type:"case",am:1,recent:1,yr:"2025",cust:"Monarch Brands",loc:"Philadelphia, PA",prods:"Fiery JobFlow, Fiery DFE on an MFP",lens:["cost","time"],
+  head:"About $400,000 a year saved; payback in under a week",
+  pts:["Cost per order fell from $2.13 to $0.90 on about 1,000 online orders a day","About four hours a day saved; one employee freed for half her day","Software MSRP under $6,000"],
+  url:"https://www.fiery.com/wp-content/uploads/sites/3/2025/01/fiery_jobflow_monarch_brands_cs-1.pdf"},
+ {id:"ioffice",type:"case",am:1,recent:1,yr:"2025",cust:"iOffice",loc:"Decatur, TX",prods:"Fiery JobFlow, Fiery Impose, MBM cutter integration",lens:["time","ease"],
+  head:"Operator training cut from 3–4 months to under two days",
+  pts:["Job setup from 7–15 minutes to under 1 minute","150+ jobs a day on four printers; 100% of jobs run through JobFlow","Submission templates fixed half of their ease-of-use issues"],
+  url:"https://www.fiery.com/wp-content/uploads/sites/3/2025/02/fiery_jobflow_ioffice_cs.pdf"},
+ {id:"alpha",type:"case",am:1,recent:1,yr:"2025",cust:"AlphaGraphics Lake Mary",loc:"Lake Mary, FL",prods:"Fiery JobFlow (with PitStop), Fiery IQ, Duplo DC-618",lens:["time","cost"],
+  head:"About 80% less time on preflight, imposition and cutting",
+  pts:["Removed 15–20 minutes of manual work per job","200–300 orders a month with minimal monitoring","JobFlow does the work of one extra staff member, without the salary"],
+  url:"https://www.fiery.com/wp-content/uploads/sites/3/2025/02/fiery_jobflow_alphagraphics_cs.pdf"},
+ {id:"colortech",type:"case",am:1,recent:1,yr:"2024",cust:"Colortech Inc.",loc:"Lebanon, PA",prods:"Fiery ColorGuard, Color Profiler Suite, Graphic Arts Pro Package, JobFlow; Konica Minolta presses",lens:["time","cost"],
+  head:"About 20 minutes saved per operator, per press, per day",
+  pts:["One-click recalibration takes about 30 seconds and runs only when a press fails verification","Four automated benchmark verifications every morning on both presses","Digital output matches their offset work across media"],
+  url:"https://www.fiery.com/wp-content/uploads/sites/3/documents/3428/fiery_colorguard_colortech_cs_en_us.pdf"},
+ {id:"copiersnw",type:"case",am:1,recent:1,yr:"Fiery era",cust:"Copiers Northwest (dealer)",loc:"Seattle, WA · 12 locations",prods:"Fiery DFEs, Command WorkStation, presets, G7 testing",lens:["time","cost","ease"],
+  head:"About 10 minutes saved per repeat job, close to one full-time salary a year",
+  pts:["Applies across 5,000–7,000 jobs a year per customer site","Sells multi-brand management from one interface","Uses G7 testing and Fiery training to build customer self-sufficiency"],
+  url:"https://www.fiery.com/wp-content/uploads/sites/3/documents/3562/fiery_copiers_nw_casestudy_hr_en_us.pdf"},
+ {id:"cdsd",type:"case",am:1,recent:1,yr:"Fiery era",cust:"Central Dauphin School District",loc:"Harrisburg, PA",prods:"Fiery JobFlow; Fiery DFEs on Kyocera and Konica Minolta; MarketDirect StoreFront",lens:["cost","time"],
+  head:"1,000+ jobs a week with operators reduced from three full-time and one part-time to two",
+  pts:["1.8 million impressions a month for 19 schools","30+ predefined JobFlow workflows","Four-day turnaround, rush jobs included"],
+  url:"https://www.fiery.com/wp-content/uploads/sites/3/documents/3460/fiery_jobflow_central_dauphin_school_district_cs_en_us.pdf"},
+ {id:"poole",type:"case",am:0,recent:1,yr:"2023",cust:"Poole Printing",loc:"Location not stated",prods:"Fiery Impose-Compose, Graphic Arts Pro Package, Color Profiler Suite",lens:["time"],
+  head:"Up to six hours of prepress saved per day",
+  pts:["Imposes 20–25 jobs a day","Saved templates make repeat layouts faster each time","Command WorkStation presets built into imposition templates"],
+  url:"https://fiery.com/wp-content/uploads/sites/3/2023/10/fiery_cs_poole.pdf"},
+ {id:"allied",type:"case",am:1,recent:0,yr:"EFI era",cust:"Allied Reliability Group",loc:"Charleston, SC",prods:"Fiery Impose, Hot Folders, ImageViewer, Graphic Arts Package; Ricoh Pro C901",lens:["time"],
+  head:"Makeready cut from 30+ minutes to 5–10 with Fiery Impose",
+  pts:["In-plant producing hundreds of thousands of training and marketing pieces a year","Color calibrated daily with a spectrophotometer","Materials ship to customer sites across the US and Europe"],
+  url:"https://www.fiery.com/wp-content/uploads/sites/3/documents/757/efi_fiery_dfe_fws_allied_reliability_cs_en_us.pdf"},
+ {id:"supercolor",type:"case",am:0,recent:1,yr:"Fiery era",cust:"Super Color Digital (testimonial)",loc:"Location not stated",prods:"Fiery Prep-it",lens:["time"],
+  head:"At least 50% of time saved versus nesting jobs manually",
+  pts:["Quoted from Technical Specialist Hossein Rasoulian on Fiery’s Prep-it product page","Customer testimonial, not a full case study"],
+  url:"https://www.fiery.com/products/large-format/fiery-prep-it"},
+ {id:"morrell",type:"case",am:1,recent:0,yr:"EFI era",cust:"Morrell Printing",loc:"Lafayette, CO",prods:"Fiery Impose, Hot Folders, Command WorkStation; Xerox iGen 150",lens:["time","ease"],
+  head:"Fiery saves the shop time and resources and speeds up its workflow",
+  pts:["About 12 staff; added a second digital color press","Qualitative result from GM Jim Morrell; no figures published"],
+  url:"https://www.fiery.com/wp-content/uploads/sites/3/documents/758/efi_fiery_dfe_morrell_cs_en_us.pdf"},
+ {id:"automate",type:"case",am:0,recent:1,yr:"Fiery era",cust:"AutoMate Label Solutions (video)",loc:"Location not stated",prods:"Fiery Impress",lens:["ease"],
+  head:"Customer video case study for Fiery Impress",
+  pts:["No figures published; watch before citing details","Colordyne Technologies has a partner video on the same page"],
+  url:"https://www.fiery.com/products/industrial/fiery-impress/"},
+ {id:"gomaq",type:"case",am:1,recent:1,yr:"2026",cust:"Gomaq with Atexco",loc:"Brazil",prods:"Fiery Impress, Fiery FreeForm Create",lens:["time"],
+  head:"Color VDP at up to 150 meters per minute, close to 2,000 pages a minute",
+  pts:["Fiery Impress adopted as Gomaq’s main industrial DFE","Integrated by press maker Atexco"],
+  url:"https://www.fiery.com/wp-content/uploads/sites/3/2026/08/fiery_impress_gomaq_cs.pdf"},
+ {id:"lerner",type:"case",am:1,recent:1,yr:"2026",cust:"Richard Lerner for Rockstar Games",loc:"New York, Toronto, London",prods:"Fiery XF, Color Verifier, Color Profiler Suite",lens:["ease"],
+  head:"Matching brand color across three countries’ print sites",
+  pts:["Contract proofs for a luxury watch maker matched final print","Inline spectrophotometer automates measurement"],
+  url:"https://www.fiery.com/wp-content/uploads/sites/3/2026/09/fiery_richard_learner_cs-1.pdf"},
+ {id:"hpi",type:"case",am:1,recent:0,yr:"EFI era",cust:"HPI",loc:"Houston, TX",prods:"Fiery proServer (XF); EFI VUTEk printers",lens:["time","cost"],
+  head:"Job processing time cut in half; 20–25% more daily output per printer",
+  pts:["8–10x faster than the third-party RIP it replaced","1,200+ unique files produced for SXSW in two weeks"],
+  url:"https://www.fiery.com/wp-content/uploads/sites/3/documents/348/efi_fiery_premium_hpi_cs_en_us.pdf"},
+ {id:"arlington",type:"case",am:1,recent:0,yr:"EFI era",cust:"Arlington County Digital Production & Mail Center",loc:"Arlington, VA",prods:"Fiery Central, Impose, Compose, JobMaster, CWS; Digital StoreFront; Xerox presses",lens:["time"],
+  head:"25% more work with the same staff",
+  pts:["About 98% of volume now digital","Rush job prepared remotely to hit a 10 a.m. deadline"],
+  url:"https://www.fiery.com/wp-content/uploads/sites/3/documents/469/efi_fiery_integration_arlington_cs_en_us.pdf"},
+ {id:"studioblue",type:"case",am:1,recent:0,yr:"EFI era",cust:"Studio Blue",loc:"Pleasanton, CA",prods:"Fiery JobMaster-Impose, Color Profiler Suite; Xerox presses",lens:["time"],
+  head:"Tabbed jobs produced 25% faster",
+  pts:["Cutsheet volume doubled after moving to the Fiery workflow"],
+  url:"https://www.fiery.com/wp-content/uploads/sites/3/documents/677/efi_fiery_wfs_studio_blue_cs_en_us.pdf"},
+ {id:"imperial",type:"case",am:1,recent:0,yr:"EFI era",cust:"Imperial Communications",loc:"New Berlin, WI",prods:"Pace, MarketDirect StoreFront, Fiery Hot Folders, CWS; Xerox",lens:["time"],
+  head:"Client Allen Edmonds cut print-order admin time 50%",
+  pts:["About 200 jobs a month arrive through the storefront"],
+  url:"https://www.fiery.com/wp-content/uploads/sites/3/documents/466/efi_fieryintegration_dsf_pace_imperial_cs_en_us.pdf"},
+ {id:"delta",type:"case",am:1,recent:0,yr:"EFI era",cust:"San Joaquin Delta College",loc:"Stockton, CA",prods:"Digital StoreFront, Fiery DFEs, CWS, Impose; Ricoh and Canon presses",lens:["time"],
+  head:"Orders often completed within 4–6 hours of submission",
+  pts:["50–60 overnight jobs released and stacked by about 12:30 p.m.","Serves 1,000+ storefront users"],
+  url:"https://www.fiery.com/wp-content/uploads/sites/3/documents/466/efi_fiery_cws_impose_delta_college_cs_en_us.pdf"},
+ {id:"nurse",type:"case",am:1,recent:0,yr:"EFI era",cust:"Company Nurse",loc:"Scottsdale, AZ",prods:"Fiery VUE on a Fiery-powered color MFP",lens:["cost","time","ease"],
+  head:"2–3 hours a day saved in document prep; $1,500+ a month projected savings",
+  pts:["Savings from printing in-house instead of using outside vendors","Templates for case studies and booklets"],
+  url:"https://www.fiery.com/wp-content/uploads/sites/3/documents/481/efi_fiery_vue_companynurse_cs_en_us.pdf"},
+ {id:"minute",type:"case",am:1,recent:0,yr:"EFI era",cust:"International Minute Press / Lasting Image",loc:"Sinking Spring, PA",prods:"Canon imagePRESS with Fiery, JobMaster, Impose",lens:["cost"],
+  head:"A client cut total inventory 45% by moving to Fiery-driven print on demand",
+  pts:["Obsolete inventory destroyed fell 71%","Medical-device client committed to 41% lower storage fees","Business cards auto-imposed 24-up"],
+  url:"https://www.fiery.com/wp-content/uploads/sites/3/documents/1140/efi_fiery_dfe_minute_press_cs_en_us.pdf"},
+ {id:"realmkt",type:"case",am:1,recent:0,yr:"EFI era",cust:"REAL Marketing",loc:"San Diego, CA and Buffalo, NY",prods:"Fiery IQ Dashboard, Insight, Go; Xerox iGen 5 and Iridesse",lens:["time"],
+  head:"Media volume reports in minutes instead of manual monthly meter reads",
+  pts:["IQ Dashboard and Insight came with the Fiery servers at no extra cost","7.5 million pieces mailed in 2020"],
+  url:"https://www.fiery.com/wp-content/uploads/sites/3/documents/2792/efi_fiery_iq_cutsheet_realmarketing_cs_en_us.pdf"},
+ {id:"casey",type:"case",am:1,recent:0,yr:"EFI era",cust:"Casey Printing",loc:"King City, CA",prods:"Fiery Color Profiler Suite; Xerox EX server powered by Fiery",lens:["ease"],
+  head:"Standard profiles are the right starting point 99 times out of 100",
+  pts:["Faster setup for a fourth-generation printer new to digital"],
+  url:"https://www.fiery.com/wp-content/uploads/sites/3/documents/462/efi_fiery_cps_casey_cs_en_us.pdf"},
+ {id:"aria",type:"case",am:1,recent:0,yr:"EFI era",cust:"ARIA Resort & Casino",loc:"Las Vegas, NV",prods:"Fiery for Xerox iGen4, Graphic Arts Package, Color Profiler Suite",lens:["time"],
+  head:"About 4 million prints in two months for a grand opening",
+  pts:["800,000+ prints a month ongoing across five properties"],
+  url:"https://www.fiery.com/wp-content/uploads/sites/3/documents/765/efi_fiery_dfe_aria_cs_en_us.pdf"},
+ {id:"snap",type:"case",am:0,recent:0,yr:"EFI era",cust:"Snap West Melbourne",loc:"Australia",prods:"Fiery JobFlow, Digital StoreFront, PrintSmith",lens:["time","ease"],
+  head:"A 110-file monthly job went from 4 hours of setup to about 4 minutes",
+  pts:["Proofs from half a day to a couple of minutes","Customer service staff push about 80% of work through JobFlow"],
+  url:"https://www.fiery.com/wp-content/uploads/sites/3/documents/2038/efi_fiery_jf_snap_cs_en_us.pdf"},
+ {id:"kwik",type:"case",am:0,recent:0,yr:"EFI era",cust:"Kwik Kopy Sydney",loc:"Australia",prods:"Fiery JobFlow",lens:["time","cost"],
+  head:"About 50% more efficient across three stores",
+  pts:["100 jobs a week went from about a week to about three days","File problems flagged before anything prints"],
+  url:"https://www.fiery.com/wp-content/uploads/sites/3/documents/2038/efi_fiery_jf_kwikkopy_cs_en_uk.pdf"},
+ {id:"secwp",type:"paper",am:0,recent:1,yr:"Nov 2025",cust:"Fiery FS700 Pro / FS700 Security White Paper",loc:"Fiery, LLC",prods:"Fiery DFEs on FS700 Pro and FS700",lens:["ease","cost"],
+  head:"FIPS 140-2 and Common Criteria (FS700 Pro) compliance for regulated buyers",
+  pts:["AES-256 storage encryption, TLS 1.2/1.3, signed updates, audit log on by default","SSO with Microsoft Entra ID and MFA","NIST 800-88 secure erase on Windows; always-on encryption on Linux"],
+  url:"https://help.fiery.com/Security/en-us/45266125_Fiery_Security_WhitePaper_FS700_en-us.pdf"},
+ {id:"hybridwp",type:"paper",am:0,recent:0,yr:"2013",cust:"Driving Hybrid Print Workflow",loc:"EFI white paper, citing InfoTrends",prods:"Fiery JDF, MIS and web-to-print integration",lens:["cost","time"],
+  head:"Printers spend $6 on process for every $1 on printing",
+  pts:["Integrated print MIS cut order processing up to 50%","Over half of shops reported more short-run jobs"],
+  url:"https://www.fiery.com/wp-content/uploads/sites/3/documents/407/efi_fiery_integration_hybrid_wp_en_us.pdf"},
+ {id:"keypoint19",type:"research",am:0,recent:0,yr:"2019",cust:"Keypoint Intelligence Production Software Investment Outlook",loc:"Cited in the Fiery ColorGuard brochure",prods:"Fiery ColorGuard, Color Profiler Suite",lens:["cost"],
+  head:"About 2% of print jobs are rejected for inconsistent color",
+  pts:["Linked to lost revenue in the hundreds of thousands of dollars a year per shop"],
+  url:"https://www.fiery.com/wp-content/uploads/sites/3/2023/10/fiery_colorguard_br_en_us.pdf"},
+ {id:"infotrends",type:"research",am:0,recent:0,yr:"Undated",cust:"InfoTrends Workflow ROI Study",loc:"Cited in the Graphic Arts Pro Package brochure",prods:"Graphic Arts Pro Package, ColorRight, JobFlow",lens:["cost","time"],
+  head:"About 25% of print providers report spoilage from missing preflight",
+  pts:["About half of all print volume needs a soft proof","Most providers take five minutes to build each soft proof"],
+  url:"https://www.fiery.com/wp-content/uploads/sites/3/documents/2203/efi_fiery_gapro_bro_en_us.pdf"},
+ {id:"robots",type:"research",am:1,recent:1,yr:"Jul 2025",cust:"Keypoint Intelligence and IPMA automation survey",loc:"Reported by WhatTheyThink",prods:"Context for finishing integration and automation",lens:["time"],
+  head:"Over half of surveyed providers were already seriously considering robotics",
+  pts:["Finishing and bindery named the top area to automate","Aging workforce and hiring difficulty cited as drivers"],
+  url:"https://whattheythink.com/data/126827-survey-says-print-service-providers-are-ready-robots/"},
+ {id:"wttjfp",type:"research",am:0,recent:1,yr:"Feb 2026",cust:"WhatTheyThink Product Spotlight: JobFlow Pro",loc:"David Zwang (sponsored, independent editorial)",prods:"Fiery JobFlow Pro",lens:["ease","time"],
+  head:"Image-to-PDF conversion in a couple of seconds, faster than JobFlow",
+  pts:["Works with ChatGPT and Claude, Gemini coming; customers use their own LLM accounts","Thousands of pre-built and community nodes"],
+  url:"https://whattheythink.com/articles/129040-product-spotlight-fiery-jobflow-pro-brings-intelligent-communication-print-workflows/"},
+ {id:"pinnacle",type:"award",am:1,recent:1,yr:"2023–2026",cust:"PRINTING United Alliance Pinnacle Product Awards",loc:"Independent industry judging",prods:"Seven Fiery winners",lens:["ease"],
+  head:"Seven Pinnacle Awards in four years",
+  pts:["2026: ColorGuard (color management and QC)","2025: XF 9 (RIP), FreeForm Create 2.0 (VDP), JobFlow Pro (prepress)","2024: Fiery Impress (RIP), Smart Estimator (prepress)","2023: Command WorkStation 7"],
+  url:"https://www.largeformatreview.com/?p=55015"},
+ {id:"certs",type:"award",am:0,recent:1,yr:"Ongoing",cust:"Standards certifications",loc:"Fogra, Idealliance, CIP4",prods:"Fiery servers, Color Profiler Suite",lens:["ease"],
+  head:"Independent proof that Fiery color and workflow meet industry standards",
+  pts:["FograCert Validation Print (ISO 12647-8) for Fiery servers","Idealliance G7 System Certification for Color Profiler Suite (first DFE-integrated)","CIP4 JDF compliance for external servers and the Automation Package"],
+  url:"https://www.fiery.com/wp-content/uploads/sites/3/2023/11/fiery_fs600pro_feature_summary_pm_en_us.pdf"}
+];
+const PTYPES=[{id:"all",name:"All proof"},{id:"case",name:"Customer case studies"},{id:"paper",name:"White papers"},{id:"research",name:"Industry research"},{id:"award",name:"Awards & certifications"}];
+const STATS=[
+ {id:"monarch",big:"$400K/yr",what:"saved with JobFlow; payback under a week",who:"Monarch Brands · Philadelphia, PA"},
+ {id:"ioffice",big:"< 2 days",what:"to train an operator, down from 3–4 months",who:"iOffice · Decatur, TX"},
+ {id:"alpha",big:"80%",what:"less prepress time with JobFlow and Duplo",who:"AlphaGraphics Lake Mary · FL"},
+ {id:"colortech",big:"20 min",what:"saved per operator, per press, per day with ColorGuard",who:"Colortech · Lebanon, PA"},
+ {id:"copiersnw",big:"≈1 FTE",what:"of time saved a year at 10 minutes per repeat job",who:"Copiers Northwest (dealer) · Seattle, WA"},
+ {id:"cdsd",big:"1,000+",what:"jobs a week run by two operators with JobFlow",who:"Central Dauphin SD · Harrisburg, PA"}
+];
+
+const P=[
+{f:"platform",n:"Fiery DFEs on the FS700 Pro platform",lic:"Ships with OEM engine",
+ what:"The latest Fiery system software running on Windows-based NX servers (FS700 Pro) and Linux-based E-series and LX Pro servers (FS700), tuned to each OEM engine.",
+ who:"Every Fiery Driven press buyer; the anchor of every OEM bundle conversation.",
+ cost:["Less downtime means more sellable press hours per month","Server-level backup and restore of presets and licenses avoids rebuild labor after a failure","Xerox FS700X Pro adds a Smart Estimator so shops quote with real production costs up front"],
+ time:["System software installs in under 30 minutes on Linux servers","Fiery Quick Recovery walks technicians through cleanup and recovery","Built-in AI tools (JobFlow Pro, Scribe) cut manual job setup and intake"],
+ ease:["Faster Fiery apps and simpler job submission","FIPS 140-2 and Common Criteria (FS700 Pro) help regulated IT teams approve the purchase","SSO with Microsoft Entra ID and MFA"],
+ proof:[["Fiery figure","Install in under 30 min (Linux)"],["Fiery white paper","FIPS 140-2, Common Criteria, AES-256, TLS 1.3"]],
+ cases:["secwp","certs"],
+ pitch:"FS700 Pro keeps the press printing: faster setup, faster recovery, and security your IT team will sign off on.",
+ src:["fs700","fs700pr","secwp","xerox","km"]},
+{f:"platform",n:"Fiery Command WorkStation",lic:"Free",
+ what:"The job management interface for every Fiery server, shared across cutsheet, wide and superwide, and high-speed inkjet printers.",
+ who:"Operators and production managers running one or many Fiery Driven devices, across brands and locations.",
+ cost:["Free to all Fiery customers, so standardizing on it adds no license cost","One interface across a mixed-brand fleet lowers training spend"],
+ time:["About 10 minutes saved per repeat job with presets (Copiers Northwest)","Run ColorGuard verification and recalibration without leaving the app","Prepare jobs in Impose, Compose or JobMaster while still printing urgent work"],
+ ease:["Same interface whether driving cutsheet, wide-format or inkjet","A free Fiery Account backs up settings and licenses","Dealers sell multi-brand management from one place"],
+ proof:[["Customer result","≈10 min per repeat job, close to one FTE a year"],["Award","2023 Pinnacle (CWS 7)"]],
+ cases:["copiersnw","pinnacle"],
+ pitch:"One free interface runs every Fiery Driven printer in the shop, whatever the brand.",
+ src:["cws","cws7","home"]},
+{f:"platform",n:"Fiery Hot Folders, Virtual Printers & Server Presets",lic:"Standard on external servers; option on some embedded",
+ what:"Drag-and-drop folders and preset print queues that apply the right settings to every job automatically.",
+ who:"Shops with repeat job types and staff of mixed experience.",
+ cost:["Predefined settings remove the setup errors that cause reprints","Standard on external Fiery servers; an option for embedded servers (US$1,130 list on Fiery Shop)"],
+ time:["Batch-process many files with the same settings","Removes repetitive driver configuration on every job"],
+ ease:["Share folders with users across the network","Anyone can drop a file and get correct output"],
+ proof:[["Fiery figure","US$1,130 embedded option (Fiery Shop list)"]],
+ cases:["copiersnw","imperial","morrell"],
+ pitch:"Set it once, drop the file, get it right every time.",
+ src:["hot","hotshop"]},
+{f:"platform",n:"Fiery Central",lic:"Base includes 3 printer licenses, up to 12",
+ what:"PDF-based production workflow server that groups Fiery Driven printers and load-balances jobs across them.",
+ who:"In-plants, CRDs and high-volume shops with several presses.",
+ cost:["Keeps every device in a group busy, getting more from equipment already owned","Includes Fiery Impose and JobMaster as standard features"],
+ time:["Automatic routing, job splitting and error recovery with the Balance option","25% more work with the same staff at Arlington County (with the Fiery suite)"],
+ ease:["Users print to one printer group as if it were a single printer","Controls up to 12 printers"],
+ proof:[["Customer result","Arlington County: 25% more work, same staff (EFI era)"]],
+ cases:["arlington"],
+ pitch:"Turn a room of presses into one smart printer that always picks the fastest path.",
+ src:["central","centralbr"]},
+{f:"platform",n:"Fiery VUE",lic:"Check current availability",
+ what:"Visual desktop app for building finished documents such as booklets from templates on Fiery-powered office and light-production printers.",
+ who:"Corporate and enterprise teams bringing document printing in-house.",
+ cost:["Company Nurse projected $1,500+ a month saved by printing in-house"],
+ time:["2–3 hours a day saved in document prep at Company Nurse"],
+ ease:["Template-driven; built for office staff, not print operators"],
+ proof:[["Customer result","Company Nurse: 2–3 hrs/day, $1,500+/month (EFI era)"]],
+ cases:["nurse"],
+ pitch:"Finished booklets from the office printer, without the print-shop bill.",
+ src:["vue"]},
+{f:"makeready",n:"Fiery Impose (and Impose-Compose)",lic:"US$865–2,790; bundle US$1,050–3,455",
+ what:"PDF imposition inside Command WorkStation with live visual preview and reusable templates; Compose adds document assembly.",
+ who:"Commercial printers, in-plants and quick printers imposing business cards, booklets and gang runs daily.",
+ cost:["Prevents costly imposition errors on complex jobs","Finisher integration cuts setup trial and error and wasted media","Gang-up layouts up to 25 × 25 optimize sheet use for small items"],
+ time:["Up to six hours of prepress saved per day at Poole Printing","Gang-up repeat jobs set up in under 5 minutes","Up to 80% setup time savings with slitter/cutter/creaser integration"],
+ ease:["See imposition changes as you make them","Designers no longer need to build imposition into files","Free eLearning included with the license"],
+ proof:[["Customer result","Poole Printing: up to 6 hours/day"],["Fiery figure","Gang-up setup in under 5 minutes"],["Fiery figure","Up to 80% setup time saved with finishers"]],
+ cases:["poole","ioffice","minute","allied","morrell"],
+ pitch:"Poole Printing gets back up to six hours of prepress a day with Fiery Impose.",
+ src:["poole_","imposeshop","icshop","imposeqq","tu510"]},
+{f:"makeready",n:"Fiery JobMaster",lic:"Paid option; bundles with Impose",
+ what:"Makeready for long, complex documents: visual tab design and insertion, page numbering, media assignment and last-minute edits.",
+ who:"Shops producing manuals, reports, catalogs, legal and education documents.",
+ cost:["Fully visual previews cut waste from mis-assembled jobs","Every minute saved lowers labor cost and frees capacity"],
+ time:["Tabbed jobs 25% faster at Studio Blue","Automatic tab creation from PDF bookmarks","Multitask with Command WorkStation while preparing jobs"],
+ ease:["Launches from Command WorkStation on PC or Mac, no separate server","Drag-and-drop page merging and numbering"],
+ proof:[["Customer result","Studio Blue: tabs 25% faster (EFI era)"]],
+ cases:["studioblue","arlington"],
+ pitch:"Tabbed, numbered, finished-right documents without the manual assembly.",
+ src:["jm"]},
+{f:"automation",n:"Fiery JobFlow (Base and paid)",lic:"Base free; JobFlow paid (MSRP under US$6,000)",
+ what:"Prepress workflow automation that turns repeat job preparation into one-click workflows. Base is preinstalled on external FS200 Pro and newer servers.",
+ who:"Shops facing labor shortages or high volumes of small, repeat jobs.",
+ cost:["About $400,000 a year saved and payback under a week at Monarch Brands","Does the work of one extra staff member at AlphaGraphics Lake Mary","PitStop preflight catches bad files before they waste clicks"],
+ time:["80% less prepress time at AlphaGraphics Lake Mary","Job setup from 7–15 minutes to under 1 minute at iOffice","Submission clicks cut from an average of 15 to 1"],
+ ease:["Operator training from 3–4 months to under two days at iOffice","Free Base version to start, upgrade when ready","Downloadable sample workflows for business cards, booklets and more"],
+ proof:[["Customer result","Monarch: ≈$400K/yr"],["Customer result","AlphaGraphics: 80% less prepress"],["Customer result","iOffice: training 3–4 months → < 2 days"]],
+ cases:["monarch","ioffice","alpha","cdsd","snap","kwik"],
+ pitch:"Monarch Brands saves about $400,000 a year with Fiery JobFlow, and it paid for itself in under a week.",
+ src:["jf","jfdg"]},
+{f:"automation",n:"Fiery JobFlow Pro",lic:"1–5 year subscription; one license covers multiple servers",
+ what:"AI-assisted workflow automation that reads job content, picks the right presets, explains preflight results and routes files automatically.",
+ who:"Growing shops that want more throughput without adding headcount; JobFlow customers ready to step up.",
+ cost:["Take on more jobs without adding headcount","One license covers multiple Fiery servers","JobFlow customers with active SMSA can transfer remaining term"],
+ time:["Setup for repeat jobs drops from minutes to seconds","Image-to-PDF conversion in a couple of seconds (WhatTheyThink)","Triggers from hot folders, barcodes, schedules, web orders and shop sensors"],
+ ease:["Drag-and-drop visual workflow builder, no scripting","Preflight reports explained for the operator’s level","Customer data stays private: uses the customer’s own LLM account (ChatGPT or Claude)"],
+ proof:[["Award","2025 Pinnacle, Prepress Software"],["Independent coverage","WhatTheyThink spotlight, Feb 2026 (sponsored)"]],
+ cases:["wttjfp","pinnacle"],
+ pitch:"JobFlow Pro automates decisions, not just steps, so new operators produce like veterans.",
+ src:["jfp","jfpbr","jfppw"]},
+{f:"automation",n:"Fiery JobExpert",lic:"Included on FS400 Pro+ externals; kit for FS500+ embedded",
+ what:"Analyzes each incoming PDF and applies the optimal Fiery job settings for color, image quality, VDP and engine features.",
+ who:"Any shop where operators guess at settings or where experienced staff are scarce.",
+ cost:["Cuts waste from wrong settings on transparencies, small text and fine lines","Gets quality right the first time"],
+ time:["Reduces setup time and speeds processing","Applies automatically via Hot Folders or in Job Center"],
+ ease:["Lets less-experienced operators run jobs correctly","Report shows exactly what it changed, and changes can be cleared"],
+ proof:[["Qualitative","No published customer metrics yet"]],
+ cases:[],
+ pitch:"A built-in expert that sets every job correctly before it prints.",
+ src:["je"]},
+{f:"automation",n:"Fiery Automation Package",lic:"1–5 year term, embedded FS400+",
+ what:"Brings Hot Folders, Virtual Printers, Rush Print, Fiery Preflight, JobFlow Base and Fiery JDF to embedded Fiery servers.",
+ who:"Owners of embedded-DFE engines who want external-server productivity.",
+ cost:["Preflight catches errors before they become unsellable prints","Term license spreads cost over 1 to 5 years"],
+ time:["Fewer touchpoints per job","Print/Process Next lets operators jump urgent jobs to the front"],
+ ease:["30-day free trial","Required for JobFlow Pro and Scribe on Linux-based servers"],
+ proof:[["Certification","CIP4 JDF compliant"]],
+ cases:["certs","infotrends"],
+ pitch:"External-server automation for embedded Fiery engines, on a flexible term.",
+ src:["fap","jfp","scribe"]},
+{f:"automation",n:"Fiery Scribe",lic:"1, 3 or 5 year subscription; 50 jobs/day per license",
+ what:"Agentic AI that reads email job requests, sets the Fiery job properties and delivers the PDF to Command WorkStation ready to print.",
+ who:"Shops and in-plants that take orders by email.",
+ cost:["Accurate job properties mean fewer reprints and less waste","Staff time moves from admin to customer work"],
+ time:["About 10 hours a month saved at 20 email jobs per day","Incoming files become print-ready jobs in seconds"],
+ ease:["Learns from past jobs and gets more accurate","60-day (or 30-job) free trial","Customer files deleted after processing"],
+ proof:[["Fiery figure","≈10 hrs/month at 20 email jobs/day"],["Fiery figure","Up to 50 jobs/day per license"]],
+ cases:[],
+ pitch:"From inbox to print-ready without retyping a single spec.",
+ src:["scribe","scribefaq","scribepm"]},
+{f:"color",n:"Fiery Color Profiler Suite",lic:"US$450–10,900 by module",
+ what:"Integrated calibration, profiling, verification and editing for Fiery Driven cutsheet and wide-format devices, powered by Fiery Edge.",
+ who:"Color-critical shops, G7 and ISO shops, and operators who need to match across devices.",
+ cost:["In-house profiling and verification reduce rework","Match color across devices so jobs can be split to balance load","Soft proofing on calibrated monitors reduces proof waste"],
+ time:["Fully automated G7 calibration with inline measurement","Standard profiles are the right start 99 times out of 100 (Casey Printing)"],
+ ease:["Wizard-driven tools for novices, expert controls for specialists","Free online training and full demo mode"],
+ proof:[["Certification","First DFE-integrated G7 System Certified toolset"],["Revalidate","2016 claim: G7 recalibration twice as fast as competitors"]],
+ cases:["colortech","casey","certs"],
+ pitch:"Expert color on every Fiery Driven device, even in the hands of a new operator.",
+ src:["cpsshop","cpsg7"]},
+{f:"color",n:"Fiery Edge",lic:"Built in (FS400+ profiles; FS600+ spot processing)",
+ what:"Fiery’s profiling and spot color technology: out-of-the-box profiles plus cleaner spot color recipes.",
+ who:"Every Fiery Driven shop; a talking point when comparing DFEs.",
+ cost:["Spot recipes limited to 3 colors plus black can reduce toner or ink use","Accurate spot colors avoid brand-color reprints"],
+ time:["High-accuracy profiles out of the box mean less tuning"],
+ ease:["On by default on FS600 and newer servers","Fine-tune with Spot Pro or Color Profiler Suite when needed"],
+ proof:[["Qualitative","Fiery cites potential savings from cleaner spot recipes"]],
+ cases:[],
+ pitch:"Better brand color out of the box, using less colorant.",
+ src:["edge"]},
+{f:"color",n:"Fiery Graphic Arts Pro Package (with Spot Pro)",lic:"1–5 year term, external FS400 Pro+",
+ what:"Server-side expert toolset: Preflight Pro, Spot Pro, ImageViewer, Postflight and Control Bar.",
+ who:"Commercial and brand-focused shops on external Fiery servers.",
+ cost:["About 25% of print providers report spoilage from missing preflight (InfoTrends)","Finds and fixes problems before they become rejected jobs and wasted clicks"],
+ time:["About half of print volume needs a soft proof; fix color on the server instead of round-tripping files","Preflight can run automatically via Hot Folders or JobFlow"],
+ ease:["Spot color aliases and groups simplify brand color management","Free trial and USD ROI calculator"],
+ proof:[["Industry research","InfoTrends: ~25% report spoilage without preflight"]],
+ cases:["infotrends","colortech","poole","allied"],
+ pitch:"Catch it before it prints: expert color and preflight on the Fiery server.",
+ src:["gapro","gaprobr","spotpro"]},
+{f:"color",n:"Fiery ColorRight Package",lic:"1–5 year term, embedded FS400+",
+ what:"The embedded-server counterpart to the Graphic Arts Pro Package: Spot Pro, ImageViewer, Image Enhance Visual Editor, Postflight and Control Bar.",
+ who:"Embedded-DFE customers producing brand or marketing color.",
+ cost:["Fix color and image issues in-house instead of paying for rework or redesign","Term licensing keeps entry cost low"],
+ time:["Correct jobs at the printer without a round trip to the designer"],
+ ease:["Visual, point-and-click correction tools","Free trial"],
+ proof:[["Industry research","Same InfoTrends spoilage and soft-proof findings apply"]],
+ cases:["infotrends"],
+ pitch:"Professional color correction for embedded Fiery engines, no designer round trip.",
+ src:["cr","spotpro"]},
+{f:"color",n:"Fiery ColorGuard",lic:"Paid Fiery IQ app; free for XF 9 users through 2026",
+ what:"Cloud color verification and recalibration with schedules, alerts, compliance reports and trend analytics across the fleet.",
+ who:"Color-critical shops, multi-site operations and anyone selling to brand owners.",
+ cost:["About 2% of print jobs are rejected for inconsistent color (Keypoint Intelligence)","Fewer reprints and less press downtime","Pool licensing moves a license to a new device without a support call"],
+ time:["About 20 minutes saved per operator, per press, per day at Colortech","One-click recalibration in about 30 seconds, only when needed","Fully automatic verification and recalibration with supported inline instruments"],
+ ease:["Traffic-light status per printer","Supports G7, G7+, Fogra PSD, ISO 12647-8 and custom references","Runs inside Command WorkStation"],
+ proof:[["Customer result","Colortech: ≈20 min/operator/press/day"],["Industry research","Keypoint: ~2% of jobs rejected for color"],["Award","2026 Pinnacle, color management & QC"]],
+ cases:["colortech","keypoint19","pinnacle"],
+ pitch:"Colortech saves about 20 minutes per operator, per press, every day with Fiery ColorGuard.",
+ src:["cg","cgbr","cws7"]},
+{f:"color",n:"Fiery Smart Estimator",lic:"Available on selected Xerox Fiery servers",
+ what:"Predicts specialty dry ink usage and cost (clear, gold, silver) before a job prints, offline or connected to the Fiery queue.",
+ who:"Shops quoting embellished work on Xerox presses with specialty inks.",
+ cost:["Quote specialty-ink jobs with known costs instead of guesses","Avoid under-pricing high-coverage metallic work"],
+ time:["Estimate from page size, coverage and copies without printing a test"],
+ ease:["Runs offline or reads jobs straight from the Fiery queue"],
+ proof:[["Award","2024 Pinnacle, prepress and premedia software"]],
+ cases:["pinnacle"],
+ pitch:"Know what the gold ink will cost before you quote the job.",
+ src:["smartest","pin24"]},
+{f:"cloud",n:"Fiery IQ (Dashboard, Insight, Notify, IQ Go)",lic:"Free core apps",
+ what:"Cloud production analytics: live printer status, historical trends, production-blocking alerts and mobile monitoring.",
+ who:"Owners and production managers who want data-driven decisions.",
+ cost:["Free apps expose underused devices and bottlenecks","REAL Marketing got Dashboard and Insight at no extra cost with its Fiery servers"],
+ time:["Media volume reports in minutes instead of manual monthly meter reads","Alerts on production-blocking events mean faster response"],
+ ease:["Browser and mobile access","Admin console sets roles and printer groups by location"],
+ proof:[["Customer result","REAL Marketing: reports in minutes (EFI era)"]],
+ cases:["realmkt"],
+ pitch:"Free visibility into every Fiery Driven printer, from anywhere.",
+ src:["iq"]},
+{f:"cloud",n:"Fiery Manage",lic:"Paid Fiery IQ app",
+ what:"Remote device management: sync configurations across same-model devices, check compliance and monitor status.",
+ who:"Multi-device and multi-location fleets, in-plants and enterprise.",
+ cost:["Consistent configurations reduce quality variation and reprints","Remote access reduces site visits"],
+ time:["Deploy color profiles, presets and paper catalogs to many devices at once","Spot configuration changes that block production"],
+ ease:["One master configuration for the fleet","Remote access to the Fiery configuration sheet"],
+ proof:[["Qualitative","No published customer metrics yet"]],
+ cases:[],
+ pitch:"Configure once, deploy everywhere, and know when a device drifts.",
+ src:["manage"]},
+{f:"vdp",n:"Fiery FreeForm Create 2.0",lic:"Free",
+ what:"Standalone variable data app for adding personalized text, images, barcodes and QR codes to any job; now works with Fiery XF 9.",
+ who:"Any Fiery Driven shop wanting to sell personalization, including large format.",
+ cost:["Free; no subscription or add-on","Removes the need for separate, expensive VDP tools in wide format"],
+ time:["Get started in minutes with a PDF and a spreadsheet","Data Preflight catches data, barcode and image-path errors early"],
+ ease:["No design skills needed","One VDP process across all Fiery Driven printers"],
+ proof:[["Award","2025 Pinnacle, Variable and Transactional Software"]],
+ cases:["pinnacle","gomaq"],
+ pitch:"Free personalization for every Fiery Driven printer, wide format included.",
+ src:["ffc","ffcpr"]},
+{f:"lf",n:"Fiery XF 9 (and proServer)",lic:"Paid RIP; options sold separately",
+ what:"Software RIP, color management and workflow for wide and superwide printers, run through Command WorkStation. proServer pairs it with dedicated hardware.",
+ who:"Sign and display, large-format graphics and mixed-technology shops.",
+ cost:["Ink Saving option can cut ink use by up to 40% on selected printers","ColorGuard included at no additional cost through 2026","FreeForm Create integration replaces separate VDP software"],
+ time:["HPI halved job processing time and gained 20–25% daily output per printer (proServer)","FAST RIP up to 5x faster; CUDA processing up to 13x faster","AI-powered bleed fills gaps automatically"],
+ ease:["Same Command WorkStation interface as cutsheet","Consistent brand color across sites in three countries (Rockstar Games)"],
+ proof:[["Award","2025 Pinnacle, RIP software"],["Customer result","HPI: processing time halved (EFI era)"],["Revalidate","40% ink, 5x RIP, 13x processing are “up to” figures"]],
+ cases:["hpi","lerner","pinnacle"],
+ pitch:"Faster RIPs, less ink and proven color for every wide-format printer in the shop.",
+ src:["xf9","xfrp"]},
+{f:"lf",n:"Fiery Prep-it",lic:"US$3,000 list",
+ what:"Print-for-cut preparation with true-shape nesting, cut path editing, tiling and hot-folder automation.",
+ who:"Sign shops and display graphics producers printing and cutting.",
+ cost:["True-shape nesting saves media; Fiery says it can pay for itself in as little as two months","Fewer touchpoints mean fewer rework errors","Connects to 1,300+ cutters from 80+ brands through Fiery XF"],
+ time:["Cut-file prep in a fraction of the time of manual layout","Hands-off production from MIS and web-to-print via JSON job definitions"],
+ ease:["About a 10-minute introduction to get started","Works with many RIP brands and any PDF-accepting DFE"],
+ proof:[["Fiery figure","10-minute introduction; 1,300+ cutters"],["Revalidate","2012 EFI launch: 10%+ media, up to 90% less nesting time"]],
+ cases:["supercolor"],
+ pitch:"Nest tighter, cut faster and stop paying for wasted media.",
+ src:["prepit","prepitbr","prepitshop","prepit2012"]},
+{f:"industrial",n:"Fiery Impress",lic:"Embedded in OEM presses",
+ what:"Scalable DFE for industrial inkjet presses with streaming VDP, advanced screening and missing-nozzle compensation.",
+ who:"Industrial inkjet press manufacturers and the label and packaging converters who run them.",
+ cost:["Image-based missing-nozzle and density compensation reduce print defects","Fits existing Esko workflows without reworking prepress or color setup"],
+ time:["Press makers production-ready in weeks rather than months, per Fiery","Color VDP at up to 150 m/min, about 2,000 pages a minute (Gomaq, Brazil)"],
+ ease:["Only DFE with full Esko Color Engine integration","Choice of Esko or Fiery color workflow"],
+ proof:[["Customer result","Gomaq/Atexco: up to 150 m/min VDP"],["Award","2024 Pinnacle, RIP software"]],
+ cases:["gomaq","pinnacle","automate"],
+ pitch:"The DFE that lets new inkjet presses drop straight into existing Esko workflows.",
+ src:["esko","wttimpress"]},
+{f:"specialty",n:"Digital Factory 12",lic:"Fiery Shop or dealer",
+ what:"Workflow and RIP for direct-to-film and direct-to-garment printing, with Fiery Edge-based profiles and a built-in Gang Sheet Builder.",
+ who:"DTF, DTG, UV and textile decorators from first shirt to high volume.",
+ cost:["Gang Sheet Builder replaces third-party layout tools","Auto nesting and knock-out tools reduce film and ink waste"],
+ time:["Streamlined interface reduces time to print","Barcode and roll-mode support for production runs"],
+ ease:["Novice and experienced operators can run complex jobs","Widest printer support including popular Epson models"],
+ proof:[["Qualitative","No published customer metrics yet"]],
+ cases:[],
+ pitch:"Professional Fiery color for DTF and DTG, with the layout tools built in.",
+ src:["df12","df12b"]},
+{f:"specialty",n:"SignLab 11",lic:"Fiery Shop or dealer",
+ what:"All-in-one design, layout and production software for sign making, large format and print-and-cut.",
+ who:"Sign shops of every size.",
+ cost:["One platform replaces multiple design and production applications","Automation reduces rework"],
+ time:["Common tasks automated in one workflow"],
+ ease:["Over 1,300 print, cut and hybrid device drivers","Purpose-built for production, not general design"],
+ proof:[["Fiery figure","1,300+ device drivers"]],
+ cases:[],
+ pitch:"Design and produce every sign from one application.",
+ src:["signlab"]},
+{f:"specialty",n:"EngraveLab and FilmMaker",lic:"Fiery Shop or dealer",
+ what:"EngraveLab drives laser and rotary engravers; FilmMaker produces screen-printing films. Both come from Fiery Specialty Production (formerly CADlink).",
+ who:"Engraving, awards, promotional products and screen-print shops.",
+ cost:["EngraveLab Laser removes the need for third-party design software in most workflows"],
+ time:["Design and output in one package"],
+ ease:["Runs virtually all laser engravers","Easy interface for detailed screen-print films"],
+ proof:[["Qualitative","30+ years in specialty markets"]],
+ cases:[],
+ pitch:"One vendor for engraving, screen print and digital specialty production.",
+ src:["engrave","spec"]},
+{f:"specialty",n:"Inèdit textile suite (neoStampa, neoTextil, neoCatalog, neoMatch)",lic:"Inèdit brand, Fiery owned",
+ what:"RIP, color and design-catalog software for digital textile printing, acquired January 2026.",
+ who:"Fashion, home decor, soft signage, dye-sublimation and direct-to-fabric producers.",
+ cost:["Freedom to use printers from the widest selection of manufacturers"],
+ time:["Streamlined textile production workflows"],
+ ease:["Established brand that textile printers already know"],
+ proof:[["Fiery figure","Acquisition completed Jan 8, 2026"]],
+ cases:[],
+ pitch:"Fiery is now a one-stop shop from cutsheet to textile.",
+ src:["inedit"]},
+{f:"integration",n:"Finishing integration",lic:"Included workflow capability",
+ what:"Fiery Impose, JobFlow and Finishing Designer talk directly to offline finishers so imposed jobs finish right the first time.",
+ who:"Shops running slitter/cutter/creasers and booklet makers, and anyone short on bindery staff.",
+ cost:["Eliminates trial-and-error setup that wastes media","One bindery tech runs the Duplo finisher and guillotine at once (AlphaGraphics)"],
+ time:["Up to 80% less setup time with integrated finishers","Barcodes on the sheet set the finisher automatically (iOffice with MBM)"],
+ ease:["Live visual preview of finishing layouts","Works with Duplo, Horizon, Plockmatic, Uchida, Morgana, MBM, Graphic Whizard and Ausjetech"],
+ proof:[["Customer result","AlphaGraphics Lake Mary (JobFlow + Duplo)"],["Industry research","Keypoint/IPMA: finishing is the top area shops want to automate"]],
+ cases:["alpha","ioffice","robots"],
+ pitch:"Prepress and finishing finally speak the same language.",
+ src:["finish","tu510"]},
+{f:"integration",n:"MIS, web-to-print, JDF and API",lic:"Fiery JDF standard on externals; API available",
+ what:"Certified Fiery JDF and the Fiery API connect storefronts, MIS and ERP systems directly to Fiery Driven printers.",
+ who:"Shops running ePS (StoreFront, Pace, PrintSmith Vision, PrintFlow), PageDNA or custom systems.",
+ cost:["Printers spend about $6 on process for every $1 on printing (InfoTrends)","Bi-directional data enables accurate costing and invoicing"],
+ time:["Allen Edmonds cut print-order admin time 50% through Imperial’s integrated storefront","Orders often finished within 4–6 hours at San Joaquin Delta College"],
+ ease:["Built-in integration wizards map media and finishing","PageDNA added storefront-to-Command WorkStation integration in Sep 2026"],
+ proof:[["Customer result","Imperial / Allen Edmonds: 50% less admin (EFI era)"],["Industry research","InfoTrends: $6 process per $1 print (2013)"]],
+ cases:["imperial","delta","cdsd","hybridwp"],
+ pitch:"From web order to finished print with fewer hands on every job.",
+ src:["mis","pagedna"]}
+];
+S.poole_="https://fiery.com/wp-content/uploads/sites/3/2023/10/fiery_cs_poole.pdf";
+
+const state={fam:"all",lens:null,q:"",ptype:"all",am:false,recent:false};
+const lib=document.getElementById("library");
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const PRBY=Object.fromEntries(PR.map(p=>[p.id,p]));
+const words=()=>state.q.toLowerCase().split(/\s+/).filter(Boolean);
+
+function famChips(){
+  const box=document.getElementById("famchips");
+  const all=[{id:"all",name:"All families"}].concat(FAMILIES);
+  box.innerHTML=all.map(f=>`<button class="chip fam-chip" type="button" data-fam="${f.id}" aria-pressed="${f.id===state.fam}">${esc(f.name)}</button>`).join("");
+  box.querySelectorAll(".fam-chip").forEach(b=>b.addEventListener("click",()=>{state.fam=b.dataset.fam;save();render();famChips();}));
+}
+function typeChips(){
+  const box=document.getElementById("ptypes");
+  box.innerHTML=PTYPES.map(t=>`<button class="chip" type="button" data-t="${t.id}" aria-pressed="${t.id===state.ptype}">${esc(t.name)} <span class="count">${t.id==="all"?PR.length:PR.filter(p=>p.type===t.id).length}</span></button>`).join("");
+  box.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{state.ptype=b.dataset.t;typeChips();renderProof();}));
+}
+function lensBlock(key,label,items){
+  const cls=state.lens?(state.lens===key?" focus":" dim"):"";
+  return `<div class="lens ${key}${cls}"><h5>${label}</h5><ul>${items.map(i=>`<li>${esc(i)}</li>`).join("")}</ul></div>`;
+}
+function card(p,i){
+  const proofs=p.proof.map(([t,v])=>`<span class="proof${t==="Revalidate"?" legacy":""}"><b>${esc(t)}:</b> ${esc(v)}</span>`).join("");
+  const proven=p.cases.length?`<div class="proven"><span class="lbl2">Proven by</span>${p.cases.map(id=>`<a href="#pr-${id}">${esc(PRBY[id].cust)}</a>`).join(" · ")}</div>`:`<div class="proven"><span class="lbl2">Proven by</span><span class="count">No published customer proof yet. Listed under Proof gaps.</span></div>`;
+  const src=p.src.map(k=>`<li><a href="${S[k]}" target="_blank" rel="noopener">${esc(S[k].replace(/^https?:\/\//,"").slice(0,90))}</a></li>`).join("");
+  return `<article class="card" id="p${i}">
+    <div class="card-top"><h4>${esc(p.n)}</h4><span class="pill">${esc(p.lic)}</span></div>
+    <p class="what">${esc(p.what)}</p>
+    <dl class="meta"><dt>Best for</dt><dd>${esc(p.who)}</dd></dl>
+    <div class="lenses">${lensBlock("cost","Cost savings",p.cost)}${lensBlock("time","Time savings",p.time)}${lensBlock("ease","Ease of use",p.ease)}</div>
+    <div class="proofs">${proofs}</div>
+    ${proven}
+    <div class="pitch"><span class="lbl">Pitch</span><q id="pitch${i}">${esc(p.pitch)}</q><button class="copy" type="button" data-i="${i}">Copy</button></div>
+    <details class="src"><summary>Product sources (${p.src.length})</summary><ul>${src}</ul></details>
+  </article>`;
+}
+function matches(p){
+  if(state.fam!=="all"&&p.f!==state.fam)return false;
+  const w=words(); if(!w.length)return true;
+  const hay=[p.n,p.what,p.who,p.lic,p.pitch].concat(p.cost,p.time,p.ease,p.proof.flat(),p.cases.map(id=>PRBY[id].cust)).join(" ").toLowerCase();
+  return w.every(x=>hay.includes(x));
+}
+function render(){
+  let html="",shown=0;
+  FAMILIES.forEach(f=>{
+    const items=P.map((p,i)=>[p,i]).filter(([p])=>p.f===f.id&&matches(p));
+    if(!items.length)return;
+    shown+=items.length;
+    html+=`<div class="family-h"><h3>${esc(f.name)}</h3><span class="count">${items.length} ${items.length===1?"product":"products"}</span></div><div class="cards">${items.map(([p,i])=>card(p,i)).join("")}</div>`;
+  });
+  lib.innerHTML=html||`<p class="empty">No products match “${esc(state.q)}”. Try a broader word such as color, automation or a partner name.</p>`;
+  document.getElementById("count").textContent=`${shown} of ${P.length} products`;
+  lib.querySelectorAll("button.copy").forEach(b=>b.addEventListener("click",()=>{
+    const t=P[+b.dataset.i].pitch;
+    const done=()=>{b.textContent="Copied";setTimeout(()=>b.textContent="Copy",1400)};
+    try{navigator.clipboard.writeText(t).then(done,()=>sel(b.dataset.i));}catch(e){sel(b.dataset.i)}
+  }));
+  renderProof();
+}
+function pmatch(p){
+  if(state.ptype!=="all"&&p.type!==state.ptype)return false;
+  if(state.am&&!p.am)return false;
+  if(state.recent&&!p.recent)return false;
+  if(state.lens&&!p.lens.includes(state.lens))return false;
+  const w=words(); if(!w.length)return true;
+  const hay=[p.cust,p.loc,p.prods,p.head,p.yr].concat(p.pts).join(" ").toLowerCase();
+  return w.every(x=>hay.includes(x));
+}
+const TYPE_LABEL={case:"Case study",paper:"White paper",research:"Industry research",award:"Award / certification"};
+const LENS_LABEL={cost:"Cost",time:"Time",ease:"Ease"};
+function renderProof(){
+  const list=PR.filter(pmatch);
+  document.getElementById("pcount").textContent=`${list.length} of ${PR.length} items`;
+  document.getElementById("pgrid").innerHTML=list.length?list.map(p=>`<article class="pcard k-${p.type}" id="pr-${p.id}">
+    <div class="tags"><span class="tag">${TYPE_LABEL[p.type]}</span>${p.am?'<span class="tag am">Americas</span>':""}<span class="tag ${p.recent?"recent":"era"}">${esc(p.yr)}${p.recent?"":" · refresh before external use"}</span></div>
+    <h4>${esc(p.cust)}</h4><p class="loc">${esc(p.loc)}</p>
+    <p class="head">${esc(p.head)}</p>
+    <ul>${p.pts.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
+    <p class="prods"><b>Products:</b> ${esc(p.prods)} · <b>Lens:</b> ${p.lens.map(l=>LENS_LABEL[l]).join(", ")}</p>
+    <p><a href="${p.url}" target="_blank" rel="noopener">Open the original document</a></p>
+  </article>`).join(""):`<p class="empty">No proof matches these filters. Clear the search or switch off a filter.</p>`;
+}
+function renderStats(){
+  document.getElementById("stats").innerHTML=STATS.map(s=>`<a class="stat" href="#pr-${s.id}"><span class="big">${esc(s.big)}</span><span class="what">${esc(s.what)}</span><span class="who">${esc(s.who)}</span></a>`).join("");
+}
+function sel(i){const el=document.getElementById("pitch"+i);const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r);}
+function save(){try{localStorage.setItem("fvpl",JSON.stringify({fam:state.fam,lens:state.lens}))}catch(e){}}
+try{const s=JSON.parse(localStorage.getItem("fvpl")||"{}");if(s.fam)state.fam=s.fam;if(s.lens)state.lens=s.lens;}catch(e){}
+document.querySelectorAll(".lens-chip").forEach(b=>{
+  b.setAttribute("aria-pressed",String(state.lens===b.dataset.lens));
+  b.addEventListener("click",()=>{state.lens=state.lens===b.dataset.lens?null:b.dataset.lens;document.querySelectorAll(".lens-chip").forEach(x=>x.setAttribute("aria-pressed",String(state.lens===x.dataset.lens)));save();render();});
+});
+document.getElementById("amOnly").addEventListener("click",e=>{state.am=!state.am;e.currentTarget.setAttribute("aria-pressed",String(state.am));renderProof();});
+document.getElementById("recentOnly").addEventListener("click",e=>{state.recent=!state.recent;e.currentTarget.setAttribute("aria-pressed",String(state.recent));renderProof();});
+document.getElementById("q").addEventListener("input",e=>{state.q=e.target.value.trim();render();});
+/* A proof link should always land on a visible card: clear proof filters when one is followed. */
+document.addEventListener("click",e=>{const a=e.target.closest('a[href^="#pr-"]');if(!a)return;if(state.ptype!=="all"||state.am||state.recent||state.lens||state.q){state.ptype="all";state.am=false;state.recent=false;document.getElementById("amOnly").setAttribute("aria-pressed","false");document.getElementById("recentOnly").setAttribute("aria-pressed","false");typeChips();if(state.lens||state.q){state.lens=null;state.q="";document.getElementById("q").value="";document.querySelectorAll(".lens-chip").forEach(x=>x.setAttribute("aria-pressed","false"));save();render();}else{renderProof();}}});
+famChips();typeChips();renderStats();render();
+</script>
+
+</body>
+</html>

@@ -1,10 +1,11 @@
-# Fiery Value Selling Playbooks
+# Fiery Value Selling
 
-Internal sales enablement for Fiery reps and OEM/dealer partners — value-add selling playbooks for 30 Fiery products, built on a four-step method.
+Sales enablement site for Fiery reps and OEM/dealer partners.
 
-## Contents
-- `index.html` — the interactive playbooks. Download and open in any browser; works offline except for the Exo 2 web font.
-- `videos/Fiery-Value-Selling-Playbooks-90s-female-voiceover.mp4` — 90-second pitch video
-- `videos/Fiery-Value-Selling-Playbooks-45s-female-voiceover.mp4` — 45-second four-step-method video
+Live site: https://robleclairo-droid.github.io/fiery-value-selling/
 
-Internal use only — do not make this repository public.
+## Pages
+- `index.html` — Value Selling Playbooks: value-add selling playbooks for 30 Fiery products, built on a four-step method
+- `sales-playbook.html` — Sales Playbook: deal finder, customer stories, ROI calculator, practice
+- `library.html` — Proof Library: value propositions and published customer results
+- `videos.html` — 90-second and 45-second pitch videos (files in `videos/`)
