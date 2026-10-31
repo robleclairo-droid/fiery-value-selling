@@ -1,11 +1,9 @@
 # Fiery Value Selling
 
-Sales enablement site for Fiery reps and OEM/dealer partners.
+One simple page for Fiery reps and OEM/dealer partners: pick a product and get the outcome to lead with, three questions to ask, answers to the top objections, and one real customer result.
 
 Live site: https://robleclairo-droid.github.io/fiery-value-selling/
 
-## Pages
-- `index.html` — Value Selling Playbooks: value-add selling playbooks for 30 Fiery products, built on a four-step method
-- `sales-playbook.html` — Sales Playbook: deal finder, customer stories, ROI calculator, practice
-- `library.html` — Proof Library: value propositions and published customer results
-- `videos.html` — 90-second and 45-second pitch videos (files in `videos/`)
+- `index.html` — the site (link straight to a product with `#id`, e.g. `#jobflow`)
+- `videos/` — 45-second and 90-second pitch videos
+- `sales-playbook.html`, `library.html`, `videos.html` — redirect old links to the home page
