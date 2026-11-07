@@ -5,5 +5,6 @@ One simple page for Fiery reps and OEM/dealer partners: pick a product and get t
 Live site: https://robleclairo-droid.github.io/fiery-value-selling/
 
 - `index.html` — the site (link straight to a product with `#id`, e.g. `#jobflow`)
+- `mend/` — Mend, an installable rehab-tracker app (PWA)
 - `videos/` — 45-second and 90-second pitch videos
 - `sales-playbook.html`, `library.html`, `videos.html` — redirect old links to the home page

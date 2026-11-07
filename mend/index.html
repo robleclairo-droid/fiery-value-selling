@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mend</title>
+<meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="description" content="Mend: a simple injury rehab tracker with daily check-ins and a 4-phase plan.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mend">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+html{-webkit-text-size-adjust:100%}[hidden]{display:none!important}
+/* Layout: native iOS feel. Grouped inset cards on systemGroupedBackground, large titles, translucent tab bar.
+   Blue = actions, teal = recovery progress, a green→red ramp for pain. */
+:root{
+  --bg:#F2F2F7; --surface:#FFFFFF; --field:#EFEFF4; --ink:#000000; --muted:#8A8A8E; --line:#E3E3E8;
+  --accent:#007AFF; --accent-ink:#FFFFFF;
+  --mend:#30B0C7; --mend-soft:#E1F4F7;
+  --p0:#34C759; --p1:#FFCC00; --p2:#FF9500; --p3:#FF3B30; --bad:#FF3B30; --bad-soft:#FFE9E7;
+  --bar:rgba(249,249,249,.82); --shadow:0 2px 12px rgba(0,0,0,.08); --seg-on:#FFFFFF;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#000000; --surface:#1C1C1E; --field:#2C2C2E; --ink:#FFFFFF; --muted:#98989F; --line:#38383A;
+  --accent:#0A84FF; --accent-ink:#FFFFFF; --mend:#40C8E0; --mend-soft:#0E3138;
+  --p0:#30D158; --p1:#FFD60A; --p2:#FF9F0A; --p3:#FF453A; --bad:#FF453A; --bad-soft:#3A1412;
+  --bar:rgba(22,22,24,.82); --shadow:0 2px 12px rgba(0,0,0,.5); --seg-on:#636366; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#000000; --surface:#1C1C1E; --field:#2C2C2E; --ink:#FFFFFF; --muted:#98989F; --line:#38383A;
+  --accent:#0A84FF; --accent-ink:#FFFFFF; --mend:#40C8E0; --mend-soft:#0E3138;
+  --p0:#30D158; --p1:#FFD60A; --p2:#FF9F0A; --p3:#FF453A; --bad:#FF453A; --bad-soft:#3A1412;
+  --bar:rgba(22,22,24,.82); --shadow:0 2px 12px rgba(0,0,0,.5); --seg-on:#636366; color-scheme:dark }
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:17px;line-height:1.35;letter-spacing:-.01em;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+*{box-sizing:border-box}
+.wrap{max-width:520px;margin:0 auto;padding-block:16px 150px}
+main{display:flex;flex-direction:column;gap:16px}
+h1,h2,h3{margin:0;text-wrap:balance}
+h1{font-size:34px;font-weight:700;letter-spacing:.01em;line-height:1.15}
+h2{font-size:22px;font-weight:700}
+h3{font-size:17px;font-weight:600}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.num{font-variant-numeric:tabular-nums}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;touch-action:manipulation}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.eyebrow{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.02em;margin-bottom:2px}
+.card{background:var(--surface);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.list{background:var(--surface);border-radius:12px;overflow:hidden}
+.section{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.02em;margin:4px 16px -10px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.spacer{flex:1}
+.btn{min-height:50px;border-radius:12px;border:0;padding:0 20px;font-weight:600;font-size:17px;background:var(--field);color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.sm{min-height:34px;font-size:15px;padding:0 14px;border-radius:17px}
+.btn.text{background:none;padding:0 4px;min-height:40px;font-weight:400}
+.btn.danger{color:var(--bad)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.block{width:100%}
+.seg{display:flex;background:var(--field);border-radius:9px;padding:2px;gap:2px}
+.seg button{flex:1;border:0;background:none;min-height:34px;border-radius:7px;font-size:14px;font-weight:500;color:var(--ink);padding:0 6px}
+.seg button[aria-pressed="true"]{background:var(--seg-on);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--mend-soft);color:var(--mend)}
+.dot{width:10px;height:10px;border-radius:50%;flex:none;display:inline-block}
+
+/* summary */
+.hero{display:flex;gap:14px;align-items:center}
+.hero .t{flex:1;min-width:0}
+.hero h2{font-size:22px}
+.phases{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.phases i{height:6px;border-radius:3px;background:var(--field)}
+.phases i.on{background:var(--mend)}
+.phase-names{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;font-size:11px;color:var(--muted)}
+.phase-names span.on{color:var(--mend);font-weight:600}
+
+/* sliders */
+.slide{display:flex;flex-direction:column;gap:6px}
+.slide .lab{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.slide b{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.slide b small{font-size:13px;font-weight:500;color:var(--muted);margin-left:6px}
+.slide input[type=range]{width:100%;height:32px;margin:0;accent-color:var(--mend)}
+.slide .ends{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.field{display:flex;flex-direction:column;gap:6px;font-size:15px}
+.field > span{font-size:13px;color:var(--muted)}
+.input{min-height:44px;border:0;border-radius:10px;background:var(--field);padding:0 12px;font-size:17px;color:var(--ink);width:100%;min-width:0}
+textarea.input{padding:10px 12px;min-height:70px;resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* guidance */
+.guide{display:flex;gap:12px;align-items:flex-start}
+.guide .dot{width:14px;height:14px;margin-top:4px}
+.guide .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.flag{background:var(--bad-soft);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.flag h3{color:var(--bad)}
+
+/* exercises */
+.ex{display:flex;gap:12px;align-items:flex-start;padding:12px 16px;border-top:.5px solid var(--line)}
+.ex:first-child{border-top:0}
+.circle{width:28px;height:28px;border-radius:50%;border:2px solid var(--line);background:none;display:grid;place-items:center;flex:none;padding:0}
+.circle svg{width:16px;height:16px;stroke:transparent;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.circle[aria-pressed="true"]{background:var(--mend);border-color:var(--mend)}
+.circle[aria-pressed="true"] svg{stroke:#fff}
+.ex .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ex .name{border:0;background:none;padding:0;text-align:left;font-size:17px;font-weight:400;color:var(--ink);display:flex;justify-content:space-between;gap:8px;width:100%}
+.ex .name span:last-child{color:var(--muted);font-size:15px;white-space:nowrap}
+.ex .dose{font-size:15px;color:var(--muted)}
+.ex .cue{font-size:15px;margin-top:4px}
+.ex.done .name span:first-child{color:var(--muted)}
+
+/* rows */
+.item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:.5px solid var(--line);min-height:52px}
+.item:first-child{border-top:0}
+.item .t{flex:1;min-width:0}
+.item .t small{display:block;color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stat{background:var(--surface);border-radius:12px;padding:12px}
+.stat b{display:block;font-size:26px;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+.chart svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:15px}
+.check i{flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:700;margin-top:1px;background:var(--field);color:var(--muted)}
+.check i.ok{background:var(--p0);color:#fff}
+.phase-card.current{outline:2px solid var(--mend);outline-offset:-2px}
+.pill-done{font-size:12px;font-weight:600;color:var(--muted)}
+
+/* chat */
+.chat{display:flex;flex-direction:column;gap:8px}
+.msg{max-width:80%;padding:8px 13px;border-radius:18px;font-size:16px;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.me{align-self:flex-end;background:var(--accent);color:var(--accent-ink)}
+.msg.ai{align-self:flex-start;background:var(--field)}
+.status{align-self:flex-start;font-size:13px;color:var(--muted);padding:0 4px}
+.starters{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+
+/* bars */
+.dock{position:fixed;left:0;right:0;bottom:calc(54px + env(safe-area-inset-bottom,0px));z-index:20;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.dock-in{max-width:520px;margin:0 auto 10px}
+.composer{background:var(--bar);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border:.5px solid var(--line);border-radius:22px;padding:5px 5px 5px 14px;display:flex;gap:8px;align-items:flex-end;box-shadow:var(--shadow)}
+.composer textarea{flex:1;min-width:0;border:0;background:none;resize:none;font-size:16px;color:var(--ink);padding:7px 0;max-height:120px;line-height:1.35}
+.composer textarea:focus{outline:none}
+.composer:focus-within{outline:2px solid var(--accent);outline-offset:1px}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--bar);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+nav.tabs div{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+nav.tabs button{border:0;background:none;min-height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10px;font-weight:500;color:var(--muted)}
+nav.tabs svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs button[aria-current="page"]{color:var(--accent)}
+.toast{position:fixed;left:0;right:0;top:calc(14px + env(safe-area-inset-top,0px));z-index:40;text-align:center;pointer-events:none;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.toast div{display:inline-block;background:var(--bar);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);color:var(--ink);border:.5px solid var(--line);border-radius:999px;padding:10px 18px;font-weight:600;font-size:15px;box-shadow:var(--shadow)}
+.toast.err div{color:var(--bad)}
+@media (max-width:360px){.grid2{grid-template-columns:1fr}h1{font-size:30px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap"><main id="app" aria-live="polite"></main></div>
+<div class="toast" id="toast" hidden><div id="toast-t"></div></div>
+<nav class="tabs" aria-label="Sections"><div>
+  <button type="button" data-tab="today"><svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21.2l8.8-8.8a5.5 5.5 0 0 0 0-7.8z"/><path d="M7 12h3l1.5-3 2 6 1.5-3h2"/></svg>Today</button>
+  <button type="button" data-tab="plan"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Plan</button>
+  <button type="button" data-tab="progress"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Progress</button>
+  <button type="button" data-tab="injury"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Injury</button>
+</div></nav>
+
+<script>
+(function(){
+"use strict";
+const NAME="Robert";
+/* ---------- rehab content ---------- */
+const PHASES=[
+ {n:1,name:"Calm",goal:"Settle the pain and keep it moving gently.",typ:"Usually 3 days to 2 weeks",
+  move:"Pain at rest is 3 or less, and everyday movements feel OK."},
+ {n:2,name:"Restore",goal:"Get your full range back and start holding gentle tension.",typ:"Usually 1 to 3 weeks",
+  move:"Range feels close to normal, and exercises stay at 3 or less."},
+ {n:3,name:"Strengthen",goal:"Rebuild strength with steadily heavier work.",typ:"Usually 3 to 6 weeks",
+  move:"Strength feels close to the other side, with no flare-ups the next morning."},
+ {n:4,name:"Return",goal:"Ease back into full lifting and sport.",typ:"Usually 2 to 4 weeks",
+  move:"Full training and games with nothing worse the next morning."}
+];
+/* area: [ [phase1 exercises], [phase2], [phase3], [phase4] ], each [name, dose, cue] */
+const AREAS={
+ shoulder:{label:"Shoulder",sided:true,ex:[
+  [["Pendulum swings","2 × 30 sec each way","Lean on a table, let the arm hang loose and draw small circles with your body, not your arm."],
+   ["Shoulder blade squeezes","2 × 10, 3-sec hold","Sit tall and pinch your shoulder blades back and down. Keep your neck relaxed."],
+   ["Table slides","2 × 10","Slide your hand forward on a table as far as is comfortable, then back."]],
+  [["Wall slides","3 × 10","Forearms on the wall, slide up only as high as feels comfortable."],
+   ["Isometric external rotation","5 × 30 sec","Elbow at your side bent 90°, press the back of your hand into a door frame at about 30% effort."],
+   ["Isometric internal rotation","5 × 30 sec","Same position, press your palm into the door frame at about 30% effort."]],
+  [["Band external rotation","3 × 12–15","Elbow tucked to your side, rotate out slowly against the band and control the return."],
+   ["Band rows","3 × 12","Pull elbows back, squeeze shoulder blades, keep shoulders down."],
+   ["Scaption raise","3 × 12, light","Thumbs up, raise in a slight V to shoulder height only."]],
+  [["Landmine press","3 × 10","Press up and forward in an arc. A safe way back into pressing."],
+   ["Push-up plus","3 × 10","At the top, push the floor away to spread your shoulder blades."],
+   ["Volleyball arm swings","3 × 10 at half speed","Practice your serve and hitting motion with no ball, then light ball contact."]]]},
+ knee:{label:"Knee",sided:true,ex:[
+  [["Quad sets","3 × 10, 5-sec hold","Leg straight, press the back of your knee into the floor and tighten your thigh."],
+   ["Heel slides","2 × 10","Lying down, slide your heel toward you as far as is comfortable."],
+   ["Straight leg raise","3 × 10","Tighten the thigh first, then lift the straight leg to the height of the other knee."]],
+  [["Wall sit, shallow","5 × 30 sec","Back on the wall, knees bent only 30–45°. Should feel like work, not pain."],
+   ["Sit-to-stand","3 × 10","Stand up from a chair without using your hands, sit down slowly."],
+   ["Easy stationary bike","10 min","Low resistance, smooth pedalling."]],
+  [["Split squat","3 × 10 each side","Drop straight down, front knee tracks over your toes."],
+   ["Step-ups","3 × 10 each side","Use a low box first. Drive through the whole foot."],
+   ["Glute bridge","3 × 12","Squeeze glutes at the top for a second."]],
+  [["Pogo hops","3 × 20 sec","Small, quick, springy hops on both feet."],
+   ["Landing drills","3 × 5","Jump off a low step and land softly with knees over toes."],
+   ["Volleyball approach jumps","3 × 5 at half height","Build up to full height over a few sessions."]]]},
+ lowerback:{label:"Lower back",sided:false,ex:[
+  [["Easy walking","10–20 min","Steady pace. Movement usually helps back pain settle."],
+   ["Knee to chest","2 × 10 each side","Gently hug one knee in, hold 2 seconds."],
+   ["Cat-cow","2 × 10","On hands and knees, slowly round and arch your back within comfort."]],
+  [["Dead bug","3 × 8 each side","Low back stays flat on the floor as you reach the opposite arm and leg."],
+   ["Glute bridge","3 × 10","Lift hips by squeezing glutes, not arching your back."],
+   ["Bird dog","3 × 8 each side","Reach the opposite arm and leg long, keep hips level."]],
+  [["Side plank","3 × 20–30 sec each side","From knees first, then feet."],
+   ["Goblet squat, light","3 × 10","Chest tall, sit between your hips."],
+   ["Hip hinge with dowel","3 × 10","Dowel touching head, upper back and tailbone the whole time."]],
+  [["Romanian deadlift, light","3 × 8–10","Start at about half your old weight and add 5–10 lb a week."],
+   ["Farmer carry","3 × 30 m","Stand tall, brace lightly, walk slowly."],
+   ["Back to normal lifts at 50%","Build up over 2–3 weeks","Squats and deadlifts return last."]]]},
+ ankle:{label:"Ankle",sided:true,ex:[
+  [["Ankle alphabet","2 rounds","Trace the alphabet with your big toe."],
+   ["Towel calf stretch","3 × 30 sec","Leg straight, pull a towel around the ball of your foot."],
+   ["Elevate and compress","As needed","Foot above heart level to settle swelling."]],
+  [["Band ankle push","3 × 15","Push your foot down against a band, slow on the way back."],
+   ["Band in and out","3 × 15 each way","Turn the foot in, then out, against the band."],
+   ["Single-leg balance","3 × 30 sec","Near a wall for safety."]],
+  [["Calf raises","3 × 15","Both legs, then progress to single leg."],
+   ["Balance on a pillow","3 × 30 sec","Unstable surface to retrain control."],
+   ["Step-downs","3 × 10","Lower slowly off a low step."]],
+  [["Pogo hops","3 × 20 sec","Quick, springy hops."],
+   ["Lateral shuffles","3 × 20 sec","Stay low, quick feet."],
+   ["Single-leg hop and stick","3 × 5","Land and hold for 2 seconds."]]]},
+ elbow:{label:"Elbow",sided:true,ex:[
+  [["Wrist range of motion","2 × 10 each way","Bend the wrist up, down and side to side gently."],
+   ["Forearm stretch","3 × 30 sec","Arm straight, gently bend the wrist down with the other hand."],
+   ["Ease off painful grip","All day","Use a looser grip on bags and the steering wheel for now."]],
+  [["Isometric wrist extension","5 × 30–45 sec","Rest your forearm on a table and press the back of your hand up into your other hand."],
+   ["Isometric grip","5 × 30 sec","Squeeze a towel or ball at about 30–50% effort."]],
+  [["Slow lowering wrist extension","3 × 15","Lift with the other hand, lower slowly over 3 seconds."],
+   ["Hammer rotations","3 × 15","Hold a hammer or light dumbbell at one end and slowly rotate palm up and palm down."],
+   ["Hammer curls, light","3 × 12","Neutral grip, smooth tempo."]],
+  [["Rows and pulldowns, lighter","3 × 10–12","Use straps if grip is the limit."],
+   ["Farmer carry","3 × 30 m","Build grip tolerance."],
+   ["Curls and pressing back in","Build up over 2 weeks","Start at about 50% of your old weights."]]]},
+ wrist:{label:"Wrist",sided:true,ex:[
+  [["Wrist circles","2 × 10 each way","Slow and within comfort."],
+   ["Tendon glides","2 × 10","Move through a straight hand, hook fist, full fist and flat fist."],
+   ["Prayer stretch, gentle","3 × 20 sec","Palms together, lower hands slowly."]],
+  [["Isometric wrist holds","5 × 30 sec each way","Press your hand against your other hand without moving."],
+   ["Ball squeeze","3 × 15","Squeeze a soft ball, relax fully between reps."]],
+  [["Wrist curls, light","3 × 15","Forearm on your thigh, palm up."],
+   ["Reverse wrist curls","3 × 15","Palm down, slow lowering."],
+   ["Side-to-side tilts","3 × 15","Hold a hammer and tilt it up and down."]],
+  [["Fist push-ups to flat hands","3 × 8","Progress to flat hands when pain-free."],
+   ["Plank on hands","3 × 20 sec","Spread fingers wide."],
+   ["Bench press back in","Build up over 2 weeks","Start at about 50% of your old weight."]]]},
+ hip:{label:"Hip",sided:true,ex:[
+  [["Windshield wipers","2 × 10","Lying on your back, knees bent, let them sway side to side."],
+   ["Clamshells","2 × 10 each side","Lying on your side, open the top knee without rolling back."],
+   ["Easy walking","10–20 min","Comfortable pace."]],
+  [["Glute bridge","3 × 10","Squeeze at the top for a second."],
+   ["Side-lying leg raise","3 × 12","Toes pointing forward, lift slowly."],
+   ["Isometric hip push","5 × 30 sec","Standing side-on to a wall, press the knee out into it."]],
+  [["Banded side walks","3 × 10 steps each way","Band above knees, stay low."],
+   ["Split squat","3 × 10 each side","Upright torso, controlled."],
+   ["Single-leg RDL, bodyweight","3 × 8 each side","Hips square, reach back with the free leg."]],
+  [["Side lunges","3 × 8 each side","Sit back into the hip."],
+   ["Skater hops","3 × 8 each side","Land softly and stick it."],
+   ["Squats and deadlifts back in","Build up over 2–3 weeks","Start at about 50% of your old weights."]]]},
+ neck:{label:"Neck",sided:false,ex:[
+  [["Chin tucks","2 × 10","Slide your chin straight back to make a double chin. Hold 2 seconds."],
+   ["Gentle turns and tilts","2 × 5 each way","Look left and right, then tilt ear toward shoulder, within comfort."],
+   ["Upper trap stretch","3 × 20 sec each side","Gentle, no pulling."]],
+  [["Isometric neck holds","3 × 10 sec each way","Press your head into your hand forward, back and to each side without moving."],
+   ["Shoulder blade squeezes","3 × 10","Back and down, neck relaxed."]],
+  [["Band rows","3 × 12","Tall posture, squeeze shoulder blades."],
+   ["Chin tuck lifts","3 × 10","Lying face down, lift your head slightly with chin tucked."],
+   ["Face pulls, light","3 × 12","Rope to eyebrows, thumbs back."]],
+  [["Shrugs, light","3 × 12","Straight up and down, no rolling."],
+   ["Overhead press back in","Build up over 2 weeks","Start at about 50% of your old weight."],
+   ["Full training","As normal","Watch for headaches or arm symptoms."]]]}
+};
+const RED_FLAGS=["Numbness, tingling or weakness in an arm or leg","Pain that wakes you at night or is bad even when still","Swelling, redness or heat that keeps getting worse","You can't put weight on it or move the joint","A pop at the time of injury followed by swelling","Fever, feeling unwell, or loss of bladder or bowel control (go to the ER)","No improvement after 2 weeks of sensible care"];
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const pad=n=>String(n).padStart(2,"0");
+const dayKey=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const parseDay=k=>{const [y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d)};
+const daysBetween=(a,b)=>Math.round((parseDay(b)-parseDay(a))/864e5);
+const fmtDay=k=>parseDay(k).toLocaleDateString("en-CA",{month:"short",day:"numeric"});
+const fmtLong=k=>parseDay(k).toLocaleDateString("en-CA",{weekday:"short",month:"short",day:"numeric"});
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const lsGet=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const painColor=p=>p<=2?"var(--p0)":p<=4?"var(--p1)":p<=6?"var(--p2)":"var(--p3)";
+const painWord=p=>p===0?"None":p<=2?"Mild":p<=4?"Moderate":p<=6?"Strong":p<=8?"Severe":"Worst";
+const CHECK='<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const today=()=>dayKey(new Date());
+
+/* ---------- state & storage ---------- */
+const S={tab:"today",docs:{},mode:"loading",col:null,draft:null,open:{},chat:[],chatDraft:"",busy:false,live:"",status:"",sample:undefined,confirm:null,newInj:false,edit:false,duringVal:{},showSum:null,day:today()};
+if(["today","plan","progress","injury"].includes(location.hash.slice(1)))S.tab=location.hash.slice(1);
+const injuries=()=>Object.values(S.docs).filter(d=>d.kind==="injury").sort((a,b)=>a.started<b.started?1:-1);
+const activeInj=()=>{const st=S.docs.settings||{},list=injuries().filter(i=>i.status!=="healed");return list.find(i=>i.id===st.active)||list[0]||null};
+const checkins=id=>Object.values(S.docs).filter(d=>d.kind==="checkin"&&d.inj===id).sort((a,b)=>a.date<b.date?1:-1);
+const sessions=id=>Object.values(S.docs).filter(d=>d.kind==="session"&&d.inj===id).sort((a,b)=>a.date<b.date?1:-1);
+const injName=i=>(i.side?i.side[0].toUpperCase()+i.side.slice(1)+" ":"")+(i.side?AREAS[i.area].label.toLowerCase():AREAS[i.area].label);
+
+function connect(){S.mode="local";S.docs=lsGet("mend-local")||{};render()}
+async function save(id,data){data=Object.assign({},data);delete data.id;S.docs[id]=Object.assign({id},data);lsSet("mend-local",S.docs);render()}
+async function remove(id){delete S.docs[id];lsSet("mend-local",S.docs);render()}
+
+/* ---------- logic ---------- */
+function guidance(inj){
+  const cs=checkins(inj.id),c=cs[0]&&cs[0].date===today()?cs[0]:null;
+  if(!c)return {level:"none",color:"var(--muted)",title:"Check in to get today's plan",text:"It takes 20 seconds. Your answers decide how hard today's session should be."};
+  if(redFlag(c))return {level:"flag",color:"var(--bad)",title:"Get this looked at",text:"What you described is worth a check with a doctor or physio before you keep training it. Stick to gentle movement until then."};
+  if(c.rest>=6||c.move>=7||(c.trend==="worse"&&c.move>=4))return {level:"easy",color:"var(--p2)",title:"Easy day",text:"It's flared up, so today is the easy version only: gentle range of motion, no loading. Pain usually settles in 1 to 3 days."};
+  if(c.move>=3||c.trend==="worse")return {level:"caution",color:"var(--p1)",title:"Go, but ease off",text:"Do today's session with one less set. Discomfort up to 5 out of 10 during exercises is OK if it settles by tomorrow morning."};
+  return {level:"go",color:"var(--p0)",title:"Full session",text:"You're good to do the whole session. Discomfort up to 5 out of 10 during exercises is OK if it settles by tomorrow morning."};
+}
+function redFlag(c){return c.rest>=8||(c.numb===true)||/numb|tingl|weak|fever|can'?t (move|walk|lift)|swollen|swelling/i.test(c.note||"")}
+function advance(inj){
+  const cs=checkins(inj.id),ph=inj.phase,since=dayKey(new Date(inj.phaseLog&&inj.phaseLog.length?inj.phaseLog[inj.phaseLog.length-1].at:inj.started+'T00:00:00'));
+  const inPhase=cs.filter(c=>c.date>=since),sess=sessions(inj.id).filter(s=>s.date>=since&&s.complete).length;
+  const lastN=(n)=>cs.slice(0,n);
+  const tests=[];
+  const noWorse=n=>lastN(n).length>=n&&lastN(n).every(c=>c.trend!=="worse");
+  if(ph===1){tests.push(["Pain at rest 3 or less on your last 3 check-ins",lastN(3).length>=3&&lastN(3).every(c=>c.rest<=3)]);
+    tests.push(["Moving pain 5 or less",lastN(3).length>=3&&lastN(3).every(c=>c.move<=5)]);tests.push(["Not getting worse",noWorse(3)])}
+  if(ph===2){tests.push(["Pain at rest 2 or less on your last 3 check-ins",lastN(3).length>=3&&lastN(3).every(c=>c.rest<=2)]);
+    tests.push(["Moving pain 3 or less",lastN(3).length>=3&&lastN(3).every(c=>c.move<=3)]);tests.push(["3 sessions done in this phase",sess>=3])}
+  if(ph===3){tests.push(["Moving pain 2 or less on your last 5 check-ins",lastN(5).length>=5&&lastN(5).every(c=>c.move<=2)]);
+    tests.push(["No flare-ups the next morning",noWorse(5)]);tests.push(["6 sessions done in this phase",sess>=6])}
+  if(ph===4){tests.push(["Moving pain 1 or less on your last 5 check-ins",lastN(5).length>=5&&lastN(5).every(c=>c.move<=1)]);
+    tests.push(["No flare-ups the next morning",noWorse(5)]);tests.push(["6 sessions done in this phase",sess>=6])}
+  return {tests,met:tests.length&&tests.every(t=>t[1]),inPhase:inPhase.length,sess};
+}
+function sessionPlan(inj){const g=guidance(inj);const easy=g.level==="easy"||g.level==="flag";const ph=easy?Math.max(1,inj.phase-1):inj.phase;
+  return {easy,phase:ph,list:AREAS[inj.area].ex[ph-1].map((e,i)=>({id:"p"+ph+"-"+i,name:e[0],dose:e[1],cue:e[2]}))}}
+
+/* ---------- views ---------- */
+function render(){
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.tab===S.tab?"page":"false"));
+  const inj=activeInj();
+  let h;
+  if(S.mode==="loading")h='<header><div class="eyebrow">'+fmtLong(today())+'</div><h1>Mend</h1></header><div class="card"><span class="muted">Loading your recovery…</span></div>';
+  else if(!inj)h=viewSetup(true);
+  else h=({today:viewToday,plan:viewPlan,progress:viewProgress,injury:viewInjury})[S.tab](inj);
+  if(S.mode==="local")h+='<p class="small muted" style="margin:0 16px">'+"Saved on this device only. Use \"Save check-ins as a spreadsheet\" to keep a backup."+'</p>';
+  $("#app").innerHTML=h;
+}
+function header(eyebrow,title,right){return '<header class="top"><div><div class="eyebrow">'+eyebrow+'</div><h1>'+title+'</h1></div>'+(right||'')+'</header>'}
+function phaseBar(ph){return '<div class="phases">'+PHASES.map(p=>'<i class="'+(p.n<=ph?"on":"")+'"></i>').join("")+'</div><div class="phase-names">'+PHASES.map(p=>'<span class="'+(p.n===ph?"on":"")+'">'+p.name+'</span>').join("")+'</div>'}
+function slider(id,label,val){return '<div class="slide"><div class="lab"><span>'+label+'</span><b id="'+id+'-v" style="color:'+painColor(val)+'">'+val+'<small>'+painWord(val)+'</small></b></div><input type="range" id="'+id+'" min="0" max="10" step="1" value="'+val+'" aria-label="'+label+', 0 to 10"><div class="ends"><span>0 No pain</span><span>10 Worst</span></div></div>'}
+function segBtns(name,opts,val){return '<div class="seg" role="group">'+opts.map(([v,l])=>'<button type="button" data-seg="'+name+'" data-v="'+v+'" aria-pressed="'+(val===v)+'">'+l+'</button>').join("")+'</div>'}
+
+function viewToday(inj){
+  const d=daysBetween(inj.started,today())+1,ph=PHASES[inj.phase-1],adv=advance(inj);
+  const cs=checkins(inj.id),c=cs[0]&&cs[0].date===today()?cs[0]:null;
+  let h=header(fmtLong(today()),"Today");
+  h+='<section class="card"><div class="hero"><div class="t"><h2>'+esc(injName(inj))+'</h2><p class="muted">Day '+d+' · Phase '+ph.n+' of 4: '+ph.name+'</p></div>'+(adv.met?'<button class="chip" type="button" data-go="plan" style="border:0">Ready for '+(inj.phase<4?PHASES[inj.phase].name:"healed")+' ›</button>':'')+'</div>'+phaseBar(inj.phase)+'<p class="small muted">'+ph.goal+'</p></section>';
+  // check-in
+  if(!c||S.edit){
+    const y=cs.find(x=>x.date<today());
+    const dr=S.draft||(S.draft=c?{rest:c.rest,move:c.move,trend:c.trend,stiff:c.stiff,numb:!!c.numb,note:c.note||"",day:"today"}:{rest:y?y.rest:2,move:y?y.move:3,trend:"same",stiff:"mild",numb:false,note:"",day:"today"});
+    h+='<div class="section">Daily check-in</div><form class="card" id="checkin">'+(c?"":'<div class="field"><span>This check-in is for</span>'+segBtns("day",[["today","Today"],["yesterday","Yesterday"]],dr.day)+'</div>')+slider("rest","Pain at rest",dr.rest)+slider("move","Pain when moving it",dr.move);
+    h+='<div class="field"><span>Compared to yesterday morning</span>'+segBtns("trend",[["better","Better"],["same","Same"],["worse","Worse"]],dr.trend)+'</div>';
+    h+='<div class="field"><span>Stiffness</span>'+segBtns("stiff",[["none","None"],["mild","Mild"],["moderate","Moderate"],["severe","Severe"]],dr.stiff)+'</div>';
+    h+='<div class="field"><span>Any numbness, tingling or weakness?</span>'+segBtns("numb",[["no","No"],["yes","Yes"]],dr.numb?"yes":"no")+'</div>';
+    h+='<label class="field"><span>Note (optional)</span><input class="input" id="note" maxlength="140" value="'+esc(dr.note)+'" placeholder="e.g. sore after reaching overhead"></label>';
+    h+='<button class="btn primary block" type="submit">'+(c?"Update check-in":"Save check-in")+'</button>'+(c?'<button class="btn text block" type="button" id="cancel-edit">Cancel</button>':'')+'</form>';
+  }else{
+    h+='<div class="section">Daily check-in</div><div class="list"><div class="item"><span class="dot" style="background:'+painColor(c.rest)+'"></span><div class="t">Pain at rest</div><b class="num">'+c.rest+'/10</b></div>';
+    h+='<div class="item"><span class="dot" style="background:'+painColor(c.move)+'"></span><div class="t">Pain when moving</div><b class="num">'+c.move+'/10</b></div>';
+    h+='<div class="item"><div class="t">vs yesterday · stiffness<small>'+esc(c.note||"")+'</small></div><span class="muted">'+({better:"Better",same:"Same",worse:"Worse"}[c.trend]||"")+' · '+(c.stiff||"")+'</span><button class="btn text" type="button" id="edit-checkin">Edit</button></div></div>';
+  }
+  // guidance
+  const g=guidance(inj);
+  if(g.level==="flag")h+='<section class="flag"><h3>'+g.title+'</h3><p>'+g.text+'</p><button class="btn text" type="button" data-go="injury" style="align-self:flex-start;color:var(--bad)">See warning signs ›</button></section>';
+  else h+='<section class="card"><div class="guide"><span class="dot" style="background:'+g.color+'"></span><div class="t"><h3>'+g.title+'</h3><p class="muted" style="font-size:15px">'+g.text+'</p></div></div></section>';
+  // session
+  const sp=sessionPlan(inj),sid="s-"+inj.id+"-"+today(),sd=S.docs[sid]||{done:[]};
+  const doneN=sp.list.filter(e=>sd.done.includes(e.id)).length;
+  h+='<div class="section">'+(sp.easy?"Today's easy version":"Today's rehab")+' · '+doneN+' of '+sp.list.length+'</div><div class="list">';
+  sp.list.forEach(e=>{const done=sd.done.includes(e.id),open=S.open[e.id];
+    h+='<div class="ex'+(done?" done":"")+'"><button type="button" class="circle" data-tick="'+e.id+'" aria-pressed="'+done+'" aria-label="'+esc(e.name)+' done">'+CHECK+'</button><div class="t"><button type="button" class="name" data-open="'+e.id+'" aria-expanded="'+!!open+'"><span>'+esc(e.name)+'</span><span>'+(open?"Hide":"How")+'</span></button><span class="dose">'+esc(e.dose)+'</span>'+(open?'<p class="cue">'+esc(e.cue)+'</p>':'')+'</div></div>'});
+  h+='</div>';
+  if(doneN>0){
+    const dp=S.duringVal[sid]!=null?S.duringVal[sid]:(sd.during==null?2:sd.during);
+    h+='<section class="card">'+slider("during","Worst pain during the session",dp)+'<button class="btn primary block" type="button" id="finish"'+(sd.complete?' disabled':'')+'>'+(sd.complete?"Session saved":"Finish session")+'</button>'+(sd.complete?'<p class="small muted">Check how it feels tomorrow morning. That tells you more than how it feels now.</p>':'')+'</section>';
+  }
+  h+='<p class="small muted" style="margin:0 16px">Lifting in Fresh Sets? Add this injury there too and it will build workouts around it.</p>';
+  return h;
+}
+
+function viewPlan(inj){
+  const adv=advance(inj);
+  let h=header(esc(injName(inj)),"Recovery plan");
+  PHASES.forEach(p=>{const cur=p.n===inj.phase,past=p.n<inj.phase;
+    h+='<section class="card phase-card'+(cur?" current":"")+'"><div class="row"><div class="spacer"><div class="eyebrow">Phase '+p.n+'</div><h2>'+p.name+'</h2></div>'+(past?'<span class="pill-done">Done ✓</span>':cur?'<span class="chip">Current</span>':'')+'</div>';
+    h+='<p>'+p.goal+'</p><p class="small muted">'+p.typ+'. Move on when: '+p.move+'</p>';
+    h+='<div class="list" style="background:var(--field)">'+AREAS[inj.area].ex[p.n-1].map(e=>'<div class="item" style="border-color:var(--line)"><div class="t">'+esc(e[0])+'<small>'+esc(e[1])+'</small></div></div>').join("")+'</div>';
+    if(cur){
+      h+='<div style="display:flex;flex-direction:column;gap:8px">'+adv.tests.map(t=>'<div class="check"><i class="'+(t[1]?"ok":"")+'">'+(t[1]?"✓":"")+'</i><span>'+t[0]+'</span></div>').join("")+'</div>';
+      if(inj.phase<4){
+        if(S.confirm==="adv")h+='<p class="small">'+(adv.met?"":"You haven't met every sign yet. Moving on early raises the chance of a flare-up. ")+'Move to '+PHASES[inj.phase].name+'?</p><div class="row"><button class="btn primary sm" type="button" id="adv-yes">Move to Phase '+(inj.phase+1)+'</button><button class="btn sm" type="button" id="adv-no">Not yet</button></div>';
+        else h+='<button class="btn '+(adv.met?"primary":"")+' block" type="button" id="adv">'+(adv.met?"Move to "+PHASES[inj.phase].name:"Move on anyway")+'</button>';
+      }else h+='<button class="btn '+(adv.met?"primary":"")+' block" type="button" data-heal="'+inj.id+'">Mark as healed</button>';
+      if(inj.phase>1)h+='<button class="btn text" type="button" id="back" style="align-self:flex-start">Go back to '+PHASES[inj.phase-2].name+'</button>';
+    }
+    h+='</section>'});
+  h+='<p class="small muted" style="margin:0 16px">Times are typical ranges, not deadlines. Moving on is based on how it feels, not the calendar.</p>';
+  return h;
+}
+
+function viewProgress(inj){
+  const cs=checkins(inj.id),ss=sessions(inj.id).filter(s=>s.complete);
+  const wk=new Date();wk.setDate(wk.getDate()-6);const wkK=dayKey(wk);
+  let streak=0;{let d=new Date();if(!(cs[0]&&cs[0].date===today()))d.setDate(d.getDate()-1);const set=new Set(cs.map(c=>c.date));while(set.has(dayKey(d))){streak++;d.setDate(d.getDate()-1)}}
+  let h=header(esc(injName(inj)),"Progress");
+  h+='<div class="stats"><div class="stat"><b>'+(daysBetween(inj.started,today())+1)+'</b><span>Days since injury</span></div><div class="stat"><b>'+ss.filter(s=>s.date>=wkK).length+'</b><span>Sessions this week</span></div><div class="stat"><b>'+streak+'</b><span>Check-in streak</span></div></div>';
+  h+='<section class="card"><h3>Pain, last 30 days</h3>'+chart(cs)+'<div class="legend"><span><i class="dot" style="background:var(--p2)"></i> When moving</span><span><i class="dot" style="background:var(--mend)"></i> At rest</span></div>';
+  if(cs.length>=4){const a=cs.slice(0,3),b=cs.slice(3,6),avg=x=>x.reduce((s,c)=>s+c.move,0)/x.length;const diff=avg(a)-avg(b);
+    h+='<p class="small muted">'+(Math.abs(diff)<.5?"Moving pain is holding steady.":diff<0?"Moving pain is down "+Math.abs(diff).toFixed(1)+" points compared to the check-ins before.":"Moving pain is up "+diff.toFixed(1)+" points. Ease off for a few days.")+'</p>'}
+  h+='</section>';
+  const log=(inj.phaseLog||[]);
+  h+='<div class="section">Share</div><div class="list"><button class="item" type="button" id="copy-sum" style="width:100%;border:0;background:none;color:var(--accent);font-size:17px;text-align:left">Copy a summary for my physio</button><button class="item" type="button" id="save-csv" style="width:100%;border:0;background:none;color:var(--accent);font-size:17px;text-align:left">Save check-ins as a spreadsheet</button></div>';
+  if(S.showSum)h+='<label class="field"><span>Select and copy this text</span><textarea class="input" readonly rows="10" id="sum-box">'+esc(S.showSum)+'</textarea></label>';
+  h+='<div class="section">Phases</div><div class="list">'+log.map((l,i)=>'<div class="item"><span class="dot" style="background:var(--mend)"></span><div class="t">Phase '+l.phase+': '+PHASES[l.phase-1].name+'<small>Started '+fmtDay(dayKey(new Date(l.at)))+'</small></div></div>').join("")+'</div>';
+  h+='<div class="section">Check-ins</div><div class="list">';
+  if(!cs.length)h+='<div class="item muted">No check-ins yet. Your first one is on the Today tab.</div>';
+  cs.slice(0,30).forEach(c=>{h+='<div class="item"><div class="t">'+fmtLong(c.date)+'<small>Rest '+c.rest+' · Moving '+c.move+' · '+({better:"Better",same:"Same",worse:"Worse"}[c.trend]||"")+(c.note?" · "+esc(c.note):"")+'</small></div><span class="dot" style="background:'+painColor(c.move)+'"></span>'+(S.confirm==="del-"+c.id?'<button class="btn text danger" type="button" data-del="'+c.id+'">Delete</button>':'<button class="btn text" type="button" data-askdel="'+c.id+'" aria-label="Delete check-in" style="color:var(--muted)">✕</button>')+'</div>'});
+  return h+'</div>';
+}
+function chart(cs){
+  const W=340,H=160,L=24,R=8,T=10,B=24,days=30,start=new Date();start.setDate(start.getDate()-days+1);
+  const x=k=>L+(daysBetween(dayKey(start),k)/(days-1))*(W-L-R),y=v=>T+(1-v/10)*(H-T-B);
+  const pts=cs.filter(c=>c.date>=dayKey(start)).slice().reverse();
+  let s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Pain over the last 30 days">';
+  [0,5,10].forEach(v=>{s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="var(--line)"/><text x="'+(L-6)+'" y="'+(y(v)+4)+'" text-anchor="end" font-size="11" fill="var(--muted)">'+v+'</text>'});
+  [0,15,29].forEach(i=>{const d=new Date(start);d.setDate(d.getDate()+i);const k=dayKey(d);s+='<text x="'+x(k)+'" y="'+(H-6)+'" text-anchor="'+(i===0?"start":i===29?"end":"middle")+'" font-size="11" fill="var(--muted)">'+(i===29?"Today":fmtDay(k))+'</text>'});
+  if(!pts.length)return s+'<text x="'+(W/2)+'" y="'+(H/2)+'" text-anchor="middle" font-size="13" fill="var(--muted)">Your check-ins will show here</text></svg>';
+  [["move","var(--p2)"],["rest","var(--mend)"]].forEach(([f,col])=>{const d=pts.map((c,i)=>(i?"L":"M")+x(c.date).toFixed(1)+" "+y(c[f]).toFixed(1)).join(" ");
+    if(pts.length>1)s+='<path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
+    pts.forEach((c,i)=>{s+='<circle cx="'+x(c.date).toFixed(1)+'" cy="'+y(c[f]).toFixed(1)+'" r="'+(i===pts.length-1?4.5:3)+'" fill="'+col+'"/>'})});
+  return '<div class="chart">'+s+'</svg></div>';
+}
+
+function injForm(i){
+  const v=i||{area:"shoulder",side:"",started:today(),how:"",diagnosis:"",seenPro:"no",goal:"Back to full lifting and Monday-night volleyball"};
+  let h='<form class="card" id="inj-form" data-id="'+(i?i.id:"")+'"><div class="grid2"><label class="field"><span>Area</span><select class="input" id="f-area">'+Object.keys(AREAS).map(k=>'<option value="'+k+'"'+(v.area===k?" selected":"")+'>'+AREAS[k].label+'</option>').join("")+'</select></label>';
+  h+='<label class="field"><span>Side</span><select class="input" id="f-side">'+[["","Not one-sided"],["left","Left"],["right","Right"]].map(([a,b])=>'<option value="'+a+'"'+(v.side===a?" selected":"")+'>'+b+'</option>').join("")+'</select></label></div>';
+  h+='<label class="field"><span>When it started</span><input class="input" type="date" id="f-started" value="'+v.started+'" max="'+today()+'"></label>';
+  h+='<label class="field"><span>How it happened</span><input class="input" id="f-how" maxlength="120" value="'+esc(v.how)+'" placeholder="e.g. tweaked it on bench press"></label>';
+  h+='<label class="field"><span>Diagnosis, if you have one</span><input class="input" id="f-diag" maxlength="120" value="'+esc(v.diagnosis)+'" placeholder="e.g. rotator cuff strain"></label>';
+  h+='<div class="field"><span>Seen a doctor or physio?</span>'+segBtns("seen",[["no","No"],["yes","Yes"]],v.seenPro==="yes"?"yes":"no")+'</div>';
+  h+='<label class="field"><span>Your goal</span><input class="input" id="f-goal" maxlength="120" value="'+esc(v.goal)+'"></label>';
+  h+='<button class="btn primary block" type="submit">'+(i?"Save changes":"Start recovery plan")+'</button>'+(i||injuries().length?'<button class="btn text block" type="button" id="form-cancel">Cancel</button>':'')+'</form>';
+  return h}
+function healedList(){const hs=injuries().filter(i=>i.status==="healed");if(!hs.length)return "";return '<div class="section">Healed</div><div class="list">'+hs.map(i=>'<div class="item"><div class="t">'+esc(injName(i))+'<small>Healed '+fmtDay(i.healed||i.started)+'</small></div><button class="btn text" type="button" data-reopen="'+i.id+'">Reopen</button></div>').join("")+'</div>'}
+function viewSetup(first){return header(fmtLong(today()),first?"Mend":"New injury")+(first?'<section class="card"><h3>What are you recovering from?</h3><p class="muted" style="font-size:15px">Add your injury and Mend builds a 4-phase plan, checks in with you each day, and adjusts each session to how it feels.</p></section>':'')+injForm(null)+(first?healedList():'')}
+function viewInjury(inj){
+  if(S.newInj)return viewSetup(false);
+  let h=header("Injury","Details");
+  if(S.edit==="inj")h+=injForm(inj);
+  else{
+    h+='<div class="list"><div class="item"><div class="t">'+esc(injName(inj))+'<small>Since '+fmtLong(inj.started)+'</small></div><button class="btn text" type="button" id="edit-inj">Edit</button></div>';
+    [["How it happened",inj.how],["Diagnosis",inj.diagnosis],["Seen a professional",inj.seenPro==="yes"?"Yes":"Not yet"],["Goal",inj.goal]].forEach(([k,v])=>{h+='<div class="item"><div class="t">'+k+'<small>'+(v?esc(v):'<span style="color:var(--accent)">Add</span>')+'</small></div></div>'});
+    h+='</div>';
+    if(S.confirm==="heal-"+inj.id)h+='<div class="card"><p>Mark '+esc(injName(inj).toLowerCase())+' as healed? Your history stays in Progress.</p><div class="row"><button class="btn primary sm" type="button" data-heal="'+inj.id+'">Mark healed</button><button class="btn sm" type="button" id="heal-no">Cancel</button></div></div>';
+    else h+='<button class="btn block" type="button" data-askheal="'+inj.id+'">Mark as healed</button>';
+    h+=S.confirm==="delinj-"+inj.id?'<div class="card"><p>Delete this injury and all its check-ins and sessions? This can\'t be undone.</p><div class="row"><button class="btn sm danger" type="button" data-delinj="'+inj.id+'">Delete everything</button><button class="btn sm" type="button" id="delinj-no">Cancel</button></div></div>':'<button class="btn text danger" type="button" data-askdelinj="'+inj.id+'" style="align-self:flex-start">Delete this injury</button>';
+  }
+  const others=injuries().filter(i=>i.id!==inj.id);
+  h+='<div class="section">All injuries</div><div class="list">';
+  others.forEach(i=>{h+='<div class="item"><div class="t">'+esc(injName(i))+'<small>'+(i.status==="healed"?"Healed":"Phase "+i.phase+" · since "+fmtDay(i.started))+'</small></div>'+(i.status==="healed"?'<button class="btn text" type="button" data-reopen="'+i.id+'">Reopen</button>':'<button class="btn text" type="button" data-switch="'+i.id+'">Switch</button>')+'</div>'});
+  h+='<button class="item" type="button" id="new-inj" style="width:100%;border:0;background:none;color:var(--accent);font-size:17px;text-align:left">Add another injury</button></div>';
+  h+='<div class="section">Get it checked if you notice</div><div class="list">'+RED_FLAGS.map(f=>'<div class="item"><span class="dot" style="background:var(--bad)"></span><div class="t">'+f+'</div></div>').join("")+'</div>';
+  h+='<p class="small muted" style="margin:0 16px">Mend gives general rehab guidance, not a diagnosis. A physio can tailor the plan to your exact injury.</p>';
+  return h;
+}
+
+
+/* ---------- export ---------- */
+function summary(inj){const cs=checkins(inj.id).slice().reverse(),ss=sessions(inj.id).filter(s=>s.complete),ph=PHASES[inj.phase-1];
+  const L=["Injury: "+injName(inj)+" (started "+inj.started+", day "+(daysBetween(inj.started,today())+1)+")",
+   "How it happened: "+(inj.how||"not given"),"Diagnosis: "+(inj.diagnosis||"none"),"Seen a professional: "+(inj.seenPro==="yes"?"yes":"not yet"),"Goal: "+(inj.goal||"not given"),
+   "Self-guided rehab phase: "+ph.n+" of 4 ("+ph.name+")","Rehab sessions completed: "+ss.length,"","Check-ins (pain 0-10 at rest / moving, vs yesterday, stiffness):"];
+  cs.slice(-30).forEach(c=>L.push(c.date+": "+c.rest+" / "+c.move+", "+c.trend+", "+c.stiff+(c.numb?", numbness or tingling reported":"")+(c.note?", "+c.note:"")));
+  if(!cs.length)L.push("none yet");
+  L.push("","Sent from Mend, a general rehab tracker.");return L.join("\n")}
+function csv(inj){const q=v=>'"'+String(v==null?"":v).replace(/"/g,'""')+'"';
+  return ["date,pain_at_rest,pain_moving,vs_yesterday,stiffness,numbness,note"].concat(checkins(inj.id).slice().reverse().map(c=>[c.date,c.rest,c.move,c.trend,c.stiff,c.numb?"yes":"no",q(c.note)].join(","))).join("\n")}
+
+/* ---------- actions ---------- */
+const yesterday=()=>{const d=new Date();d.setDate(d.getDate()-1);return dayKey(d)};
+async function saveCheckin(inj,c,date){date=date||today();await save("c-"+inj.id+"-"+date,Object.assign({kind:"checkin",inj:inj.id,date:date,at:new Date().toISOString()},c))}
+async function setPhase(inj,p){const log=(inj.phaseLog||[]).concat([{phase:p,at:new Date().toISOString()}]);await save(inj.id,Object.assign({},inj,{phase:p,phaseLog:log}))}
+let toastT=null;
+function toast(m,err){$("#toast-t").textContent=m;$("#toast").classList.toggle("err",!!err);$("#toast").hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{$("#toast").hidden=true},2600)}
+function go(tab){S.tab=tab;S.confirm=null;S.edit=false;S.newInj=false;S.draft=null;S.showSum=null;try{history.replaceState(null,"","#"+tab)}catch(x){}render();window.scrollTo(0,0)}
+
+document.querySelector("nav.tabs").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b)go(b.dataset.tab)});
+document.addEventListener("input",e=>{const t=e.target;
+  if(t.type==="range"){const v=+t.value,o=$("#"+t.id+"-v");if(o){o.style.color=painColor(v);o.innerHTML=v+"<small>"+painWord(v)+"</small>"}
+    if(S.draft&&(t.id==="rest"||t.id==="move"))S.draft[t.id]=v;
+    if(t.id==="during"){const inj=activeInj();if(inj){const sid="s-"+inj.id+"-"+today();S.duringVal[sid]=v}}}
+  if(t.id==="note"&&S.draft)S.draft.note=t.value;});
+document.addEventListener("click",async e=>{
+  const b=e.target.closest("button");if(!b||b.closest("nav.tabs")||b.type==="submit")return;const inj=activeInj();
+  if(b.dataset.go){go(b.dataset.go);return}
+  if(b.dataset.seg){const v=b.dataset.v,k=b.dataset.seg;
+    if(k==="seen"){b.parentNode.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));return}
+    if(S.draft){S.draft[k]=k==="numb"?v==="yes":v}b.parentNode.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));return}
+  if(b.id==="edit-checkin"){S.edit=true;S.draft=null;render();return}
+  if(b.id==="cancel-edit"){S.edit=false;S.draft=null;render();return}
+  if(b.dataset.open){S.open[b.dataset.open]=!S.open[b.dataset.open];render();return}
+  if(b.dataset.tick&&inj){const sid="s-"+inj.id+"-"+today(),sd=Object.assign({kind:"session",inj:inj.id,date:today(),done:[],complete:false},S.docs[sid]||{});
+    const set=new Set(sd.done);set.has(b.dataset.tick)?set.delete(b.dataset.tick):set.add(b.dataset.tick);sd.done=[...set];sd.phase=sessionPlan(inj).phase;
+    try{await save(sid,sd)}catch(x){toast("Couldn't save. Try again.",true)}return}
+  if(b.id==="finish"&&inj){const sid="s-"+inj.id+"-"+today(),sd=Object.assign({},S.docs[sid]);const r=$("#during");sd.during=r?+r.value:2;sd.complete=true;
+    try{await save(sid,sd);toast(sd.during>5?"Saved. That was above 5, so go lighter next time.":"Session saved. Nice work.",sd.during>5)}catch(x){toast("Couldn't save. Try again.",true)}return}
+  if(b.id==="adv"){S.confirm="adv";render();return}
+  if(b.id==="adv-no"){S.confirm=null;render();return}
+  if(b.id==="adv-yes"&&inj){S.confirm=null;await setPhase(inj,inj.phase+1);toast("Moved to "+PHASES[inj.phase].name);return}
+  if(b.id==="back"&&inj){await setPhase(inj,inj.phase-1);toast("Back to "+PHASES[inj.phase-2].name+". That's normal.");return}
+  if(b.dataset.askheal){S.confirm="heal-"+b.dataset.askheal;render();return}
+  if(b.id==="heal-no"){S.confirm=null;render();return}
+  if(b.dataset.heal){const i=S.docs[b.dataset.heal];if(i){S.confirm=null;await save(i.id,Object.assign({},i,{status:"healed",healed:today()}));toast("Marked healed. Well done.");go("today")}return}
+  if(b.dataset.reopen){const i=S.docs[b.dataset.reopen];if(i){const n=Object.assign({},i,{status:"active"});delete n.healed;try{await save(i.id,n);await save("settings",{active:i.id});toast("Reopened");go("today")}catch(x){toast("Couldn't save. Try again.",true)}}return}
+  if(b.dataset.askdelinj){S.confirm="delinj-"+b.dataset.askdelinj;render();return}
+  if(b.id==="delinj-no"){S.confirm=null;render();return}
+  if(b.dataset.delinj){const id=b.dataset.delinj;S.confirm=null;try{for(const d of Object.values(S.docs)){if(d.id===id||d.inj===id)await remove(d.id)}
+    if((S.docs.settings||{}).active===id)await save("settings",{active:null});toast("Injury deleted");go("today")}catch(x){toast("Couldn't delete. Try again.",true)}return}
+  if(b.id==="copy-sum"&&inj){const t=summary(inj);try{await navigator.clipboard.writeText(t);toast("Summary copied")}catch(x){S.showSum=t;render();const bx=$("#sum-box");if(bx){bx.focus();bx.select()}}return}
+  if(b.id==="save-csv"&&inj){try{const u=URL.createObjectURL(new Blob([csv(inj)],{type:"text/csv"})),a=document.createElement("a");a.href=u;a.download="mend-"+inj.area+"-checkins.csv";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000)}catch(x){S.showSum=csv(inj);render()}return}
+  if(b.dataset.switch){await save("settings",{active:b.dataset.switch});toast("Switched");go("today");return}
+  if(b.id==="new-inj"){S.newInj=true;render();window.scrollTo(0,0);return}
+  if(b.id==="edit-inj"){S.edit="inj";render();return}
+  if(b.id==="form-cancel"){S.edit=false;S.newInj=false;render();return}
+  if(b.dataset.askdel){S.confirm="del-"+b.dataset.askdel;render();return}
+  if(b.dataset.del){S.confirm=null;try{await remove(b.dataset.del)}catch(x){}return}
+});
+document.addEventListener("submit",async e=>{e.preventDefault();const f=e.target,inj=activeInj();
+  if(f.id==="checkin"&&inj){const d=S.draft;d.rest=+$("#rest").value;d.move=+$("#move").value;
+    const yd=d.day==="yesterday";try{await saveCheckin(inj,{rest:d.rest,move:d.move,trend:d.trend,stiff:d.stiff,numb:!!d.numb,note:d.note.slice(0,140)},yd?yesterday():today());S.edit=false;S.draft=null;render();toast(yd?"Yesterday's check-in saved":"Check-in saved")}catch(x){toast("Couldn't save. Try again.",true)}return}
+  if(f.id==="inj-form"){const id=f.dataset.id||"inj-"+Date.now(),old=S.docs[id]||{};
+    const seen=f.querySelector('[data-seg="seen"][aria-pressed="true"]');
+    const doc=Object.assign({kind:"injury",phase:1,status:"active",phaseLog:[{phase:1,at:new Date().toISOString()}]},old,{
+      area:$("#f-area").value,side:$("#f-side").value,started:$("#f-started").value||today(),how:$("#f-how").value.trim(),diagnosis:$("#f-diag").value.trim(),
+      seenPro:seen?seen.dataset.v:"no",goal:$("#f-goal").value.trim()});
+    try{await save(id,doc);if(!f.dataset.id)await save("settings",{active:id});S.edit=false;S.newInj=false;toast(f.dataset.id?"Saved":"Recovery plan ready");if(!f.dataset.id)go("today");else render()}catch(x){toast("Couldn't save. Try again.",true)}}
+});
+
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&S.mode!=="loading"){const t=today();if(t!==S.day){S.day=t;S.draft=null;render()}}});
+render();
+connect();
+if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(()=>{});
+setTimeout(()=>{if(S.mode==="loading"){S.mode="local";S.docs=lsGet("mend-local")||{};render()}},11000);
+})();
+</script>
+
+</body></html>
