@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>JARVIS</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Orbitron:wght@600&display=swap">
 <link rel="stylesheet" href="/style.css">
 <script src="/web.js" defer></script>
 <script src="/app.js" defer></script>
@@ -29,8 +28,11 @@
 <main id="hud" class="page">
   <section class="briefing">
     <div class="greeting">
-      <h1 id="greet">Good day.</h1>
-      <p id="summary" class="summary">Loading your day…</p>
+      <div>
+        <h1 id="greet">Good day.</h1>
+        <p id="summary" class="summary">Loading your day…</p>
+      </div>
+      <button type="button" class="weather" id="weather" hidden aria-label="Weather"></button>
     </div>
     <div class="cards">
       <button type="button" class="card stat" id="c-next">
@@ -60,7 +62,8 @@
   <div class="layout">
     <div class="main-col">
       <section class="card panel">
-        <div class="panel-head"><h2>Today</h2><span class="hint" id="today-date"></span></div>
+        <div class="week" id="week" aria-label="Pick a day"></div>
+        <div class="panel-head"><h2 id="day-title">Today</h2><span class="hint" id="today-date"></span></div>
         <div class="allday" id="allday"></div>
         <div class="lane-heads" id="lane-heads" hidden></div>
         <div class="timeline" id="timeline" aria-label="Today's timeline"></div>
@@ -72,19 +75,20 @@
     </div>
 
     <aside class="side-col">
-      <section class="card panel ask">
-        <div class="ask-head">
-          <svg class="reactor" viewBox="0 0 100 100" aria-hidden="true">
-            <circle cx="50" cy="50" r="46" class="r1"/><circle cx="50" cy="50" r="34" class="r2"/><circle cx="50" cy="50" r="22" class="r3"/><circle cx="50" cy="50" r="12" class="core"/>
-          </svg>
-          <div><h2>Ask JARVIS</h2><p class="say" id="say" aria-live="polite">Connecting…</p></div>
+      <section class="card panel chat" id="chat">
+        <div class="chat-head">
+          <span class="orb" aria-hidden="true"></span>
+          <div class="grow"><h2>JARVIS</h2><span class="hint" id="chat-sub">Ask about your day, or anything else</span></div>
+          <button type="button" class="btn ghost small" id="chat-new" title="Start a new chat">New</button>
+          <button type="button" class="btn ghost small" id="chat-expand" title="Make the chat bigger" aria-pressed="false">Expand</button>
         </div>
-        <form id="f" class="ask-form">
-          <input id="q" placeholder="When's my next clean?" autocomplete="off" aria-label="Ask JARVIS" maxlength="500">
-          <button type="button" class="btn icon" id="mic" hidden aria-pressed="false" title="Dictate" aria-label="Dictate">🎙</button>
-          <button class="btn primary">Ask</button>
-        </form>
+        <div class="thread" id="thread" aria-live="polite"></div>
         <div class="chips" id="chips"></div>
+        <form id="f" class="ask-form">
+          <textarea id="q" rows="1" placeholder="Message JARVIS" aria-label="Message JARVIS" maxlength="8000"></textarea>
+          <button type="button" class="btn icon" id="mic" hidden aria-pressed="false" title="Dictate" aria-label="Dictate">🎙</button>
+          <button class="btn primary" id="send">Send</button>
+        </form>
         <label class="voice" id="voice-wrap" hidden><input type="checkbox" id="voice"> Read answers aloud</label>
       </section>
 
@@ -127,9 +131,9 @@
       <h2>How to read the web</h2>
       <ul class="howto-list">
         <li><b>Rings are days.</b> Today is the outer ring; each ring inward is a day later.</li>
-        <li><b>Spokes are hours.</b> Midnight is at the top, noon at the bottom. The amber hand is now.</li>
+        <li><b>Spokes are hours.</b> Midnight is at the top, noon at the bottom. The orange hand is now.</li>
         <li><b>Dots are events,</b> in their calendar's colour. <span class="kp">◯ people</span> and <span class="kl">◇ places</span> link the events they share.</li>
-        <li><span class="kc">Red line</span>: someone is double-booked. <span class="kt">Dashed amber</span>: 45 min or less to get between two places.</li>
+        <li><span class="kc">Red line</span>: someone is double-booked. <span class="kt">Dashed orange</span>: not enough time to get between two places.</li>
       </ul>
     </section>
     <section class="card panel">
@@ -154,6 +158,7 @@
 </section>
 
 <div class="scrim" id="scrim" hidden></div>
+<div class="scrim" id="chat-scrim" hidden></div>
 <aside class="drawer" id="drawer" hidden aria-modal="true" role="dialog" aria-labelledby="drawer-title">
   <button type="button" class="btn ghost drawer-close" id="drawer-close" aria-label="Close">✕</button>
   <div id="drawer-body"></div>

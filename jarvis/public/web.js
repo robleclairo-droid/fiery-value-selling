@@ -9,6 +9,7 @@
   const DAY = 864e5;
   const PALETTE = ['#4fd8ff', '#ffb347', '#b48cff', '#5ef0a8', '#ff7ac6', '#ffd84f', '#8fb3ff'];
   const TIGHT_MIN = 45;
+  const DRIVE_BUFFER = 10;
 
   function parse(iso, allDay) {
     if (!iso) return null;
@@ -76,6 +77,14 @@
     // Time dependencies. A clash or tight hand-off only counts for someone who is in both events:
     // you (events on your own calendars) or a person invited to both.
     const timed = events.filter(x => !x.allDay);
+    const tp = S.travel && S.travel.places ? new Map(S.travel.places.map((p, i) => [p, i])) : null;
+    const driveMin = (a, b) => {
+      if (!tp) return null;
+      const i = tp.get(String(a || '').trim()), j = tp.get(String(b || '').trim());
+      if (i === undefined || j === undefined) return null;
+      const m = S.travel.minutes[i] && S.travel.minutes[i][j];
+      return typeof m === 'number' ? m : null;
+    };
     const actors = new Map();
     const addActor = (id, label, x) => { if (!actors.has(id)) actors.set(id, { label, list: [] }); actors.get(id).list.push(x); };
     for (const x of timed) {
@@ -103,7 +112,11 @@
         if (last && x.s >= last.en && sod(x.s) === sod(last.s)) {
           const gap = Math.round((x.s - last.en) / 60000);
           const pa = placeKey(last.e.location), pb = placeKey(x.e.location);
-          if (pa && pb && pa !== pb && gap <= TIGHT_MIN) dep(last, x, 'tight', { gap }, label, tight);
+          if (pa && pb && pa !== pb) {
+            // With a known drive time, "tight" means the gap is shorter than the drive plus a 10-minute buffer.
+            const drive = driveMin(last.e.location, x.e.location);
+            if (drive !== null ? gap < drive + DRIVE_BUFFER : gap <= TIGHT_MIN) dep(last, x, 'tight', { gap, drive }, label, tight);
+          }
         }
         if (!last || x.en > last.en) last = x;
       }
@@ -267,20 +280,20 @@
     // the web: day rings and hour spokes
     ctx.lineWidth = px(1);
     for (let d = 0; d < G.days; d++) {
-      ctx.strokeStyle = d === 0 ? 'rgba(79,216,255,.45)' : 'rgba(79,216,255,.16)';
+      ctx.strokeStyle = d === 0 ? C.ring0 : C.ring;
       ctx.beginPath(); ctx.arc(0, 0, ringR(d), 0, Math.PI * 2); ctx.stroke();
     }
     for (let h = 0; h < 24; h++) {
       const a = hourAng(h), major = h % 3 === 0;
-      ctx.strokeStyle = major ? 'rgba(79,216,255,.22)' : 'rgba(79,216,255,.08)';
+      ctx.strokeStyle = major ? C.spoke0 : C.spoke;
       ctx.beginPath(); ctx.moveTo(Math.cos(a) * ringR(G.days - 1) * 0.5, Math.sin(a) * ringR(G.days - 1) * 0.5);
       ctx.lineTo(Math.cos(a) * (R + 14), Math.sin(a) * (R + 14)); ctx.stroke();
       if (major) {
-        ctx.fillStyle = C.muted; ctx.font = `${px(11)}px ${C.mono}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = C.muted; ctx.font = `${px(11)}px ${C.body}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText(p2(h) + ':00', Math.cos(a) * (R + 30), Math.sin(a) * (R + 30));
       }
     }
-    ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.font = `${px(10)}px ${C.mono}`;
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.font = `${px(10)}px ${C.body}`;
     for (let d = 0; d < G.days; d++) {
       const label = d === 0 ? 'TODAY' : new Date(G.t0 + d * DAY + 36e5).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric' }).toUpperCase();
       const a = hourAng(23.55), r = ringR(d);
@@ -290,7 +303,7 @@
 
     // now hand
     const nowD = new Date(), na = hourAng(nowD.getHours() + nowD.getMinutes() / 60 + nowD.getSeconds() / 3600);
-    ctx.strokeStyle = C.amber; ctx.lineWidth = px(1.5); ctx.shadowColor = C.amber; ctx.shadowBlur = 8;
+    ctx.strokeStyle = C.amber; ctx.lineWidth = px(1.5); ctx.shadowColor = C.amber; ctx.shadowBlur = 0;
     ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(na) * (R + 14), Math.sin(na) * (R + 14)); ctx.stroke();
     ctx.shadowBlur = 0;
     ctx.fillStyle = C.amber; ctx.beginPath(); ctx.arc(Math.cos(na) * ringR(0), Math.sin(na) * ringR(0), px(3.5), 0, Math.PI * 2); ctx.fill();
@@ -313,7 +326,7 @@
         ctx.globalAlpha = faded ? 0.08 : l.type === 'next' ? (hot ? 0.8 : 0.28) : 0.95;
         ctx.lineWidth = px(l.type === 'next' ? 1 : 2.4);
         if (l.type === 'tight') ctx.setLineDash([px(6), px(4)]);
-        if (l.type !== 'next') { ctx.shadowColor = col; ctx.shadowBlur = 10; }
+        if (l.type !== 'next') { ctx.shadowColor = col; ctx.shadowBlur = 0; }
         ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
         ctx.shadowBlur = 0;
       }
@@ -348,7 +361,7 @@
       const p = pos.get(ev.key), dim = dimmed(ev), past = ev.en < now, live = ev.s <= now && ev.en > now;
       ctx.globalAlpha = dim ? 0.15 : past ? 0.35 : 1;
       const r = px(ev === focus ? 7.5 : 5.5);
-      ctx.fillStyle = ev.cal.color; ctx.shadowColor = ev.cal.color; ctx.shadowBlur = dim ? 0 : 12;
+      ctx.fillStyle = ev.cal.color; ctx.shadowColor = ev.cal.color; ctx.shadowBlur = dim ? 0 : 3;
       ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
       ctx.shadowBlur = 0;
       if (live) { ctx.strokeStyle = C.amber; ctx.lineWidth = px(1.5); ctx.beginPath(); ctx.arc(p.x, p.y, r + px(4 + 2 * Math.sin(now / 300)), 0, Math.PI * 2); ctx.stroke(); }
@@ -498,7 +511,7 @@
   }
   function init() {
     canvas = $('web-canvas'); ctx = canvas.getContext('2d');
-    ['bg', 'fg', 'cyan', 'amber', 'red', 'muted', 'mono', 'body', 'person', 'place'].forEach(n => { C[n] = css('--' + n); });
+    ['bg', 'fg', 'cyan', 'amber', 'red', 'muted', 'mono', 'body', 'person', 'place', 'ring0', 'ring', 'spoke0', 'spoke'].forEach(n => { C[n] = css('--' + n); });
     bindCanvas();
     new ResizeObserver(() => { if (running) resize(); }).observe(canvas.parentElement);
     ['wf-people', 'wf-places', 'wf-seq', 'wf-shared'].forEach(id => $(id).addEventListener('change', rebuild));

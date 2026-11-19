@@ -205,9 +205,63 @@ function renderToggles() {
 
 /* ---------- today timeline ---------- */
 const PX = 64; // pixels per hour
+let selDay = 0; // which day the timeline shows: 0 = today
+function dayStart(i) { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate() + i).getTime(); }
+const WX = { 0: ['☀️', 'Clear'], 1: ['🌤', 'Mostly clear'], 2: ['⛅️', 'Partly cloudy'], 3: ['☁️', 'Cloudy'], 45: ['🌫', 'Fog'], 48: ['🌫', 'Fog'],
+  51: ['🌦', 'Drizzle'], 53: ['🌦', 'Drizzle'], 55: ['🌦', 'Drizzle'], 56: ['🌧', 'Freezing drizzle'], 57: ['🌧', 'Freezing drizzle'],
+  61: ['🌧', 'Light rain'], 63: ['🌧', 'Rain'], 65: ['🌧', 'Heavy rain'], 66: ['🌧', 'Freezing rain'], 67: ['🌧', 'Freezing rain'],
+  71: ['🌨', 'Light snow'], 73: ['🌨', 'Snow'], 75: ['❄️', 'Heavy snow'], 77: ['🌨', 'Snow grains'], 80: ['🌦', 'Showers'], 81: ['🌧', 'Showers'], 82: ['⛈', 'Heavy showers'],
+  85: ['🌨', 'Snow showers'], 86: ['❄️', 'Snow showers'], 95: ['⛈', 'Thunderstorm'], 96: ['⛈', 'Thunderstorm'], 99: ['⛈', 'Thunderstorm'] };
+const wx = code => WX[code] || ['🌡', ''];
+const isoDay = t => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+function renderWeek() {
+  const box = $('week'); box.replaceChildren();
+  const days = Math.min(7, RAW.windowDays || 7);
+  if (selDay >= days) selDay = 0;
+  const evs = allEvents();
+  for (let i = 0; i < days; i++) {
+    const t = dayStart(i), list = evs.filter(x => x.en > t && x.s < dayStart(i + 1));
+    const b = el('button', 'wd'); b.type = 'button'; b.setAttribute('aria-pressed', String(i === selDay));
+    b.appendChild(el('span', 'n', i === 0 ? 'Today' : new Date(t).toLocaleDateString(undefined, { weekday: 'short' })));
+    b.appendChild(el('span', 'd', String(new Date(t).getDate())));
+    const w = RAW.weather && RAW.weather.days.find(d => d.date === isoDay(t));
+    b.appendChild(el('span', 'w', w ? `${wx(w.code)[0]} ${w.max}°` : plural(list.length, 'event')));
+    const dots = el('span', 'dots');
+    [...new Set(list.map(x => x.c.color))].slice(0, 4).forEach(c => { const d = el('i'); d.style.background = c; dots.appendChild(d); });
+    if (list.some(x => flags(x.key).red.length)) dots.appendChild(el('i', 'flag'));
+    b.appendChild(dots);
+    b.title = `${longDay(t)}: ${plural(list.length, 'event')}${w ? `, ${wx(w.code)[1].toLowerCase()}, high ${w.max}°, low ${w.min}°` : ''}`;
+    b.addEventListener('click', () => { selDay = i; renderWeek(); renderTimeline(); });
+    box.appendChild(b);
+  }
+}
+function renderWeather() {
+  const b = $('weather'), w = RAW.weather;
+  b.hidden = !w; if (!w) return;
+  b.replaceChildren();
+  const [ico, text] = wx(w.current.code);
+  const t = el('div'); t.append(el('div', 'temp', `${w.current.temp}${w.unit}`));
+  const m = el('div'); m.append(el('div', '', text), el('div', 'meta', `${w.place} · feels ${w.current.feels}°`));
+  b.append(el('span', 'ico', ico), t, m);
+  b.onclick = () => openDrawer(body => {
+    const h = el('h2', '', w.place); h.id = 'drawer-title'; body.appendChild(h);
+    body.appendChild(el('p', 'when', `${text}, ${w.current.temp}${w.unit} · feels like ${w.current.feels}° · wind ${w.current.wind} ${w.wind_unit}`));
+    const ul = el('ul', 'wx-days');
+    w.days.forEach(d => {
+      const li = el('li'); const t = parse(d.date, true);
+      const extra = d.snow > 0 ? `${d.snow} cm snow` : d.pop !== null && d.pop >= 20 ? `${d.pop}% chance of rain or snow` : '';
+      li.append(el('span', '', dayName(t).split(',')[0]), el('span', '', wx(d.code)[0]), el('span', 'lo', [wx(d.code)[1], extra].filter(Boolean).join(' · ')));
+      const hl = el('span'); hl.append(el('span', 'hi', `${d.max}°`), document.createTextNode(' '), el('span', 'lo', `${d.min}°`)); li.appendChild(hl);
+      ul.appendChild(li);
+    });
+    body.appendChild(ul);
+    body.appendChild(el('p', 'hint', 'Weather data by Open-Meteo.com'));
+  });
+}
 function renderTimeline() {
-  const now = Date.now(), t0 = sod(now), t1 = t0 + DAY;
-  $('today-date').textContent = longDay(now);
+  const now = Date.now(), t0 = dayStart(selDay), t1 = dayStart(selDay + 1);
+  $('day-title').textContent = selDay === 0 ? 'Today' : selDay === 1 ? 'Tomorrow' : new Date(t0).toLocaleDateString(undefined, { weekday: 'long' });
+  $('today-date').textContent = longDay(t0);
   const evs = allEvents().filter(x => x.en > t0 && x.s < t1);
   const allDay = evs.filter(x => x.e.allDay);
   const timed = evs.filter(x => !x.e.allDay).map(x => Object.assign({}, x, { vs: Math.max(x.s, t0), ve: Math.min(x.en, t1) }));
@@ -219,12 +273,13 @@ function renderTimeline() {
   });
 
   const tl = $('timeline'); tl.replaceChildren();
-  if (!timed.length) { tl.style.height = 'auto'; tl.appendChild(el('p', 'empty', allDay.length ? 'No timed events today.' : 'Nothing on your calendar today.')); return; }
+  if (!timed.length) { tl.style.height = 'auto'; tl.appendChild(el('p', 'empty', allDay.length ? 'No timed events this day.' : 'Nothing on your calendar this day.')); return; }
   const hourOf = t => (t - t0) / 36e5;
   let startH = Math.min(8, Math.floor(Math.min(...timed.map(x => hourOf(x.vs)))));
   let endH = Math.max(18, Math.ceil(Math.max(...timed.map(x => hourOf(x.ve)))));
   const nowH = hourOf(now);
-  startH = Math.max(0, Math.min(startH, Math.floor(nowH))); endH = Math.min(24, Math.max(endH, Math.ceil(nowH + 0.01)));
+  if (selDay === 0) { startH = Math.min(startH, Math.floor(nowH)); endH = Math.max(endH, Math.ceil(nowH + 0.01)); }
+  startH = Math.max(0, startH); endH = Math.min(24, endH);
   tl.style.height = (endH - startH) * PX + 'px';
 
   for (let h = startH; h <= endH; h++) {
@@ -280,7 +335,7 @@ function renderTimeline() {
     tl.appendChild(b);
   });
 
-  if (nowH >= startH && nowH <= endH) {
+  if (selDay === 0 && nowH >= startH && nowH <= endH) {
     const n = el('div', 'now'); n.style.top = (nowH - startH) * PX + 'px';
     n.appendChild(el('span', '', 'Now ' + fmtT(now)));
     tl.appendChild(n);
@@ -326,6 +381,7 @@ function renderUpcoming() {
 }
 
 /* ---------- needs attention ---------- */
+const gapText = l => (typeof l.drive === 'number' ? `${l.gap} min gap, about ${l.drive} min drive` : `${l.gap} min to get`);
 function renderAttention() {
   const ul = $('attn-list'); ul.replaceChildren();
   const add = (cls, title, meta, onClick) => {
@@ -343,7 +399,7 @@ function renderAttention() {
     G.conflicts.forEach(l => add('red', `Double-booked: ${l.a.e.title} and ${l.b.e.title}`,
       `${l.who.join(', ')} · ${dayName(l.b.s)} ${fmtT(l.b.s)} · ${l.minutes} min overlap`, () => openEvent(l.b.key)));
     G.tight.forEach(l => add('amber', `Tight: ${l.a.e.title} → ${l.b.e.title}`,
-      `${l.who.join(', ')} · ${dayName(l.b.s)} · ${l.gap} min to get from ${String(l.a.e.location).split(',')[0]} to ${String(l.b.e.location).split(',')[0]}`, () => openEvent(l.b.key)));
+      `${l.who.join(', ')} · ${dayName(l.b.s)} · ${gapText(l)} from ${String(l.a.e.location).split(',')[0]} to ${String(l.b.e.location).split(',')[0]}`, () => openEvent(l.b.key)));
   }
   if (!ul.children.length) ul.appendChild(el('li', 'empty', 'Nothing needs attention this week.'));
 }
@@ -397,13 +453,15 @@ function renderFoot() {
     `Next automatic sync in ${durText(nextIn)}`,
     `This computer: CPU ${SYS.cpu}% · memory ${SYS.mem}%`,
     RAW ? plural(RAW.accounts.length, 'account') + ' connected' : '',
+    RAW && RAW.weather ? 'Weather by Open-Meteo.com' : '',
+    RAW && RAW.travel ? 'Drive times © OpenStreetMap contributors, OSRM' : '',
   ].filter(Boolean).forEach(t => f.appendChild(el('span', '', t)));
 }
 
 function renderAll() {
   if (!RAW) return;
   $('demo').hidden = !RAW.demo;
-  renderTop(); renderBriefing(); renderToggles(); renderTimeline(); renderUpcoming();
+  renderTop(); renderBriefing(); renderWeather(); renderToggles(); renderWeek(); renderTimeline(); renderUpcoming();
   renderAttention(); renderMail(); renderTasks(); renderFiles(); renderFoot();
 }
 
@@ -463,7 +521,7 @@ function openEvent(key) {
         const before = l.b.key === key, o = before ? l.a : l.b;
         const n = el('div', 'note amber');
         n.appendChild(el('b', '', before ? `Only ${l.gap} min after ${o.e.title}` : `Only ${l.gap} min before ${o.e.title}`));
-        n.appendChild(document.createTextNode(`${l.who.join(', ')} must get from ${String(l.a.e.location).split(',')[0]} to ${String(l.b.e.location).split(',')[0]}. `));
+        n.appendChild(document.createTextNode(`${l.who.join(', ')} must get from ${String(l.a.e.location).split(',')[0]} to ${String(l.b.e.location).split(',')[0]}${typeof l.drive === 'number' ? `, about a ${l.drive} min drive` : ''}. `));
         const go = el('button', '', 'Open ' + o.e.title); go.type = 'button'; go.addEventListener('click', () => openEvent(o.key));
         n.appendChild(go); body.appendChild(n);
       });
@@ -545,8 +603,8 @@ $('acct-btn').addEventListener('click', openAccounts);
 /* ---------- refresh ---------- */
 $('refresh').addEventListener('click', async () => {
   const b = $('refresh'); b.disabled = true; b.textContent = 'Refreshing…';
-  try { await post('/api/refresh'); say('Pulled fresh data from Google.'); }
-  catch (e) { say('Could not refresh. Is JARVIS still running in Terminal?'); }
+  try { await post('/api/refresh'); }
+  catch (e) { say('Could not refresh. Is JARVIS still running in Terminal?', true); }
   b.disabled = false; b.textContent = 'Refresh';
 });
 
@@ -560,9 +618,11 @@ es.addEventListener('snapshot', ev => {
   applyView(); renderAll();
   if (first) {
     first = false;
-    say(RAW.demo ? 'Running on demo data. Ask me about your schedule, cleans, mail or tasks.'
-      : !RAW.accounts.length ? 'Connect a Google account to get started.'
-        : 'Ready. Ask me about your day, or tap a suggestion below.');
+    say(RAW.demo ? 'This is demo data. Ask me about the schedule, cleans, mail or tasks, or anything else.'
+      : !RAW.accounts.length ? 'Connect a Google account to get started. Click the + at the top right.'
+        : 'Ready when you are. Ask about your day, or anything else.');
+    const c = RAW.chat || {};
+    $('chat-sub').textContent = !c.sdk ? 'Quick answers only. Run "npm install" to switch on Claude.' : !c.key ? 'Quick answers only. Add a Claude API key to chat.' : 'Ask about your day, or anything else';
   }
 });
 es.addEventListener('sys', ev => { SYS = JSON.parse(ev.data); renderTop(); renderFoot(); });
@@ -575,26 +635,137 @@ $('tf').addEventListener('submit', e => {
   post('/api/tasks', { text: v }).then(() => { $('ti').value = ''; }).catch(() => say('Could not save that task. Is JARVIS still running?'));
 });
 
-/* ---------- ask, voice ---------- */
-let typing, voiceOn = !!store('jarvis-voice');
-function say(msg) {
-  const box = $('say'); clearTimeout(typing); let i = 0; box.textContent = '';
-  (function n() { box.textContent = msg.slice(0, ++i); if (i < msg.length) typing = setTimeout(n, 10); })();
-  if (voiceOn && 'speechSynthesis' in window) {
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(msg);
-    u.onstart = () => document.body.classList.add('speaking');
-    u.onend = u.onerror = () => document.body.classList.remove('speaking');
-    speechSynthesis.speak(u);
+/* ---------- chat ---------- */
+let voiceOn = !!store('jarvis-voice');
+let chatId = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2));
+let chatBusy = false, chatAbort = null;
+const thread = $('thread');
+function scrollThread() { thread.scrollTop = thread.scrollHeight; }
+function bubble(who, cls) {
+  const row = el('div', 'msg-row ' + who), b = el('div', 'bubble' + (cls ? ' ' + cls : ''));
+  row.appendChild(b); thread.appendChild(row); scrollThread();
+  return b;
+}
+// Small, safe Markdown: paragraphs, bullet and numbered lists, **bold**, `code`, ``` blocks. Builds DOM nodes, never HTML strings.
+function inline(parent, text) {
+  text.split(/(\*\*[^*\n]+\*\*|`[^`\n]+`)/g).forEach(part => {
+    if (/^\*\*[^*]+\*\*$/.test(part)) parent.appendChild(el('strong', '', part.slice(2, -2)));
+    else if (/^`[^`]+`$/.test(part)) parent.appendChild(el('code', '', part.slice(1, -1)));
+    else if (part) parent.appendChild(document.createTextNode(part));
+  });
+}
+function renderMd(box, text) {
+  box.replaceChildren();
+  let list = null, para = null, pre = null;
+  const flush = () => { list = null; para = null; };
+  for (const line of text.split('\n')) {
+    if (/^```/.test(line.trim())) { if (pre) pre = null; else { flush(); const p = el('pre'); pre = el('code'); p.appendChild(pre); box.appendChild(p); } continue; }
+    if (pre) { pre.textContent += (pre.textContent ? '\n' : '') + line; continue; }
+    const m = /^\s*(?:([-*•])|(\d+)[.)])\s+(.*)$/.exec(line);
+    if (m) {
+      const tag = m[1] ? 'UL' : 'OL';
+      if (!list || list.tagName !== tag) { list = el(tag.toLowerCase()); box.appendChild(list); para = null; }
+      const li = el('li'); inline(li, m[3]); list.appendChild(li);
+    } else if (!line.trim()) flush();
+    else {
+      const clean = line.replace(/^#{1,6}\s+/, '');
+      if (!para) { para = el('p'); box.appendChild(para); list = null; } else para.appendChild(document.createElement('br'));
+      if (clean !== line) para.appendChild(el('strong', '', clean)); else inline(para, clean);
+    }
   }
 }
-async function run(q) {
-  say('Thinking…');
-  try { say((await post('/api/ask', { q })).text); } catch (e) { say('I could not reach the JARVIS server.'); }
+function speak(msg) {
+  if (!voiceOn || !('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(msg.replace(/[*`#]/g, ''));
+  u.onstart = () => document.body.classList.add('speaking');
+  u.onend = u.onerror = () => document.body.classList.remove('speaking');
+  speechSynthesis.speak(u);
 }
-[['What\'s next?', 'schedule'], ['Cleans', 'cleaning'], ['Double-bookings', 'conflicts'], ['Mail', 'mail'], ['Tasks', 'tasks'], ['Status report', 'report'], ['Focus today', 'What should I focus on today?']]
-  .forEach(([label, q]) => { const b = el('button', '', label); b.type = 'button'; b.addEventListener('click', () => run(q)); $('chips').appendChild(b); });
-$('f').addEventListener('submit', e => { e.preventDefault(); const v = $('q').value.trim(); if (v) { run(v); $('q').value = ''; } });
+function say(msg, isError) { renderMd(bubble('bot', isError ? 'err' : ''), msg); speak(msg); }
+function setBusy(on) {
+  chatBusy = on; document.body.classList.toggle('thinking', on);
+  $('send').textContent = on ? 'Stop' : 'Send';
+}
+async function quick(label, q) {
+  if (chatBusy) return;
+  bubble('user').textContent = label;
+  try { say((await post('/api/ask', { q })).text); } catch (e) { say('I could not reach JARVIS. Is it still running in Terminal?', true); }
+}
+async function chat(text) {
+  if (chatBusy) return;
+  bubble('user').textContent = text;
+  const box = bubble('bot');
+  const dots = el('span', 'dots-typing'); dots.append(el('i'), el('i'), el('i')); box.appendChild(dots);
+  setBusy(true);
+  chatAbort = new AbortController();
+  let full = '', failed = '';
+  try {
+    const r = await fetch('/api/chat', { method: 'POST', headers: { 'content-type': 'application/json', 'x-jarvis': '1' }, body: JSON.stringify({ id: chatId, text }), signal: chatAbort.signal });
+    if (!r.ok || !r.body) throw new Error('HTTP ' + r.status);
+    const reader = r.body.getReader(), dec = new TextDecoder();
+    let buf = '';
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let i;
+      while ((i = buf.indexOf('\n\n')) >= 0) {
+        const block = buf.slice(0, i); buf = buf.slice(i + 2);
+        const ev = (/^event: (.*)$/m.exec(block) || [])[1], data = (/^data: (.*)$/m.exec(block) || [])[1];
+        if (!ev || !data) continue;
+        const d = JSON.parse(data);
+        if (ev === 'delta') { full += d.text; renderMd(box, full); scrollThread(); }
+        else if (ev === 'error') failed = d.message;
+        else if (ev === 'done' && d.truncated) full += '\n\n(That answer was cut off for length.)';
+      }
+    }
+  } catch (e) { failed = chatAbort.signal.aborted ? 'Stopped.' : 'I could not reach JARVIS. Is it still running in Terminal?'; }
+  setBusy(false);
+  if (failed && !full) { box.classList.add('err'); box.textContent = failed; }
+  else { renderMd(box, full + (failed && failed !== 'Stopped.' ? `\n\n(${failed})` : '')); speak(full); }
+  scrollThread();
+}
+const QUICK = /^(schedule|calendar|agenda|cleaning|cleans?|conflicts?|clashes|overlaps?|mail|email|inbox|files|drive|tasks?|report|status)$/i;
+function submit() {
+  if (chatBusy) { if (chatAbort) chatAbort.abort(); return; }
+  const v = $('q').value.trim(); if (!v) return;
+  $('q').value = ''; $('q').style.height = '';
+  const c = (RAW && RAW.chat) || {};
+  if (QUICK.test(v) || !c.sdk || !c.key) quickOrHint(v, c); else chat(v);
+}
+function quickOrHint(v, c) {
+  if (QUICK.test(v)) return quick(v, v);
+  bubble('user').textContent = v;
+  say(!c.sdk
+    ? 'To chat with Claude here, stop JARVIS (Ctrl+C in Terminal), run `npm install` in the jarvis folder, then start it again. Until then I can answer the quick buttons below.'
+    : 'To chat with Claude here, add your Claude API key to the `.env` file in the jarvis folder as `ANTHROPIC_API_KEY=...` and restart JARVIS. Until then I can answer the quick buttons below.', true);
+}
+[["What's next?", 'schedule'], ['Cleans', 'cleaning'], ['Double-bookings', 'conflicts'], ['Mail', 'mail'], ['Tasks', 'tasks'], ['Status report', 'report']]
+  .forEach(([label, q]) => { const b = el('button', '', label); b.type = 'button'; b.addEventListener('click', () => quick(label, q)); $('chips').appendChild(b); });
+[['Plan my day', 'Look at my day and tell me what to focus on, in order, with anything I should watch out for.'], ['Draft a reply', 'Help me draft a reply to my most recent unread email. Ask me what I want to say first.']]
+  .forEach(([label, q]) => { const b = el('button', '', label); b.type = 'button'; b.addEventListener('click', () => { $('q').value = q; submit(); }); $('chips').appendChild(b); });
+$('f').addEventListener('submit', e => { e.preventDefault(); submit(); });
+$('q').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); submit(); } });
+$('q').addEventListener('input', () => { const q = $('q'); q.style.height = ''; q.style.height = Math.min(140, q.scrollHeight + 2) + 'px'; });
+document.addEventListener('keydown', e => {
+  if (e.key === '/' && !/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) { e.preventDefault(); $('q').focus(); }
+  if (e.key === 'Escape' && document.body.classList.contains('chat-big')) setBig(false);
+});
+$('chat-new').addEventListener('click', () => {
+  if (chatAbort) chatAbort.abort();
+  post('/api/chat/reset', { id: chatId }).catch(() => {});
+  chatId = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2));
+  thread.replaceChildren(); say('New chat. What do you need?');
+});
+function setBig(on) {
+  document.body.classList.toggle('chat-big', on); $('chat-scrim').hidden = !on;
+  $('chat-expand').textContent = on ? 'Shrink' : 'Expand'; $('chat-expand').setAttribute('aria-pressed', String(on));
+  scrollThread(); if (on) $('q').focus();
+}
+$('chat-expand').addEventListener('click', () => setBig(!document.body.classList.contains('chat-big')));
+$('chat-scrim').addEventListener('click', () => setBig(false));
+
 if ('speechSynthesis' in window) {
   $('voice-wrap').hidden = false; $('voice').checked = voiceOn;
   $('voice').addEventListener('change', () => { voiceOn = $('voice').checked; store('jarvis-voice', voiceOn); if (!voiceOn) speechSynthesis.cancel(); });
@@ -606,7 +777,7 @@ if (SR) {
   let listening = false;
   rec.onresult = ev => { $('q').value = Array.from(ev.results).map(r => r[0].transcript).join(' '); };
   rec.onstart = () => { listening = true; m.setAttribute('aria-pressed', 'true'); };
-  rec.onend = () => { listening = false; m.setAttribute('aria-pressed', 'false'); const v = $('q').value.trim(); if (v) { $('q').value = ''; run(v); } };
-  rec.onerror = ev => { if (ev.error === 'not-allowed') say('Microphone access is blocked. Allow it in Chrome to dictate.'); };
+  rec.onend = () => { listening = false; m.setAttribute('aria-pressed', 'false'); submit(); };
+  rec.onerror = ev => { if (ev.error === 'not-allowed') say('Microphone access is blocked. Allow it in Chrome to dictate.', true); };
   m.addEventListener('click', () => { if (listening) rec.stop(); else { try { rec.start(); } catch (e) { /* already listening */ } } });
 }
