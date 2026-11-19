@@ -39,11 +39,9 @@ You create your own Google sign-in once. It takes about ten minutes.
    - Then click **Publish app**, so it moves to "In production". In "Testing" mode Google expires your sign-in every 7 days. You don't need Google's verification for personal use. You'll see an "unverified app" warning when you sign in; click **Advanced → Go to JARVIS**.
 4. Under **APIs & Services → Credentials**, choose **Create credentials → OAuth client ID → Web application**. Add this authorized redirect URI:
    `http://localhost:3000/auth/callback`
-5. Copy the settings file and paste in the client ID and secret:
+5. Put the downloaded `client_secret_….json` file in the `jarvis` folder. JARVIS reads the client ID and secret from it, and git ignores it. (Or copy `.env.example` to `.env` and paste them into `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.) Then run:
    ```bash
    cd jarvis
-   cp .env.example .env
-   # edit .env: GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=...
    node server.js
    ```
 6. Open http://localhost:3000 and click **+ Connect Google account**. Sign in with your Luma account, then click it again and sign in with your Fiery account. Each account's calendars, mail and files merge into the one screen.

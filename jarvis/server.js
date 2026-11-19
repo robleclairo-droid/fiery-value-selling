@@ -581,8 +581,21 @@ function createApp(env = process.env) {
   return { listen, close, refresh, getState: () => state, cfg };
 }
 
+// Reads the client_secret_*.json file Google Cloud gives you, if it's in the jarvis folder.
+function loadClientFile(dir) {
+  try {
+    const f = fs.readdirSync(dir).find(n => /^client_secret.*\.json$/i.test(n));
+    if (!f) return {};
+    const j = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
+    const c = j.web || j.installed || {};
+    return c.client_id && c.client_secret ? { GOOGLE_CLIENT_ID: c.client_id, GOOGLE_CLIENT_SECRET: c.client_secret } : {};
+  } catch (e) { return {}; }
+}
+
 if (require.main === module) {
   const env = { ...loadEnvFile(path.join(ROOT, '.env')), ...process.env };
+  const file = loadClientFile(ROOT); // used when .env leaves the Google client blank
+  for (const k of Object.keys(file)) if (!env[k]) env[k] = file[k];
   const app = createApp(env);
   app.listen().then(port => {
     console.log(`JARVIS running at http://localhost:${port}${app.cfg.demo ? '  (DEMO DATA)' : ''}`);
