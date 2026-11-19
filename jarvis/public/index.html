@@ -7,11 +7,14 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@400;500;600&family=Share+Tech+Mono&display=swap">
 <link rel="stylesheet" href="/style.css">
 <script src="/app.js" defer></script>
+<script src="/web.js" defer></script>
 </head>
 <body>
 <div id="demo" class="demo" hidden>DEMO DATA. Connect a Google account to see your own calendar, mail and files.</div>
 <header>
-  <h1>J.A.R.V.I.S.</h1>
+  <div class="brand"><h1>J.A.R.V.I.S.</h1>
+    <nav class="views" aria-label="Views"><a id="v-hud" href="#" aria-current="page">HUD</a><a id="v-web" href="#web">WEB</a></nav>
+  </div>
   <div class="status">LINK <b id="link">CONNECTING</b> · SYNC <b id="sync">--</b> · <b id="up">--</b> HOST UP</div>
 </header>
 
@@ -60,5 +63,38 @@
     <section class="panel"><h2>Alerts</h2><ul id="alerts"></ul></section>
   </div>
 </main>
+
+<section class="webview" id="webview" aria-label="Schedule web">
+  <div class="web-stage">
+    <canvas id="web-canvas" aria-label="Spider web of this week's events, people and places. The list beside it has the same information."></canvas>
+    <div class="web-tools">
+      <button type="button" id="w-in" aria-label="Zoom in">+</button>
+      <button type="button" id="w-out" aria-label="Zoom out">−</button>
+      <button type="button" id="w-reset">RESET</button>
+    </div>
+    <p class="web-hint">Rings are days (today on the outside) · spokes are hours · the amber hand is now</p>
+  </div>
+  <aside class="web-side">
+    <section class="panel"><h2>This week</h2><p class="msg w-sumline" id="w-sum"></p>
+      <div class="w-stats"><div><b id="w-conf">0</b><span>overlaps</span></div><div><b id="w-tight">0</b><span>tight hand-offs</span></div></div>
+      <ul id="w-watch"></ul>
+    </section>
+    <section class="panel"><h2>Selected</h2><div id="w-detail"></div></section>
+    <section class="panel"><h2>Most connected</h2><ul id="w-hubs"></ul></section>
+    <section class="panel"><h2>Show</h2>
+      <div class="w-filters">
+        <label><input type="checkbox" id="wf-people" checked> People</label>
+        <label><input type="checkbox" id="wf-places" checked> Places</label>
+        <label><input type="checkbox" id="wf-seq" checked> Running order</label>
+        <label><input type="checkbox" id="wf-shared"> Shared only</label>
+      </div>
+      <ul class="w-key">
+        <li><i class="k-person"></i>Person</li><li><i class="k-place"></i>Place</li>
+        <li><i class="k-conf"></i>Overlap</li><li><i class="k-tight"></i>Tight hand-off</li><li><i class="k-next"></i>Running order</li>
+      </ul>
+      <ul class="w-key" id="w-legend"></ul>
+    </section>
+  </aside>
+</section>
 </body>
 </html>

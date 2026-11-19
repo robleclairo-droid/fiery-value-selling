@@ -196,6 +196,8 @@ es.onopen = () => setLink(true);
 es.onerror = () => setLink(false);
 es.addEventListener('snapshot', ev => {
   S = JSON.parse(ev.data);
+  window.JARVIS_STATE = S;
+  window.dispatchEvent(new CustomEvent('jarvis:snapshot', { detail: S }));
   renderAll();
   if (first) {
     first = false;
@@ -243,7 +245,7 @@ async function run(q) {
   try { say((await post('/api/ask', { q })).text); }
   catch (e) { say('I could not reach the JARVIS server.'); }
 }
-['schedule', 'cleaning', 'mail', 'files', 'tasks', 'report'].forEach(c => {
+['schedule', 'cleaning', 'conflicts', 'mail', 'files', 'tasks', 'report'].forEach(c => {
   const b = el('button', '', c); b.type = 'button'; b.addEventListener('click', () => run(c)); $('chips').appendChild(b);
 });
 const focusBtn = el('button', '', 'focus today'); focusBtn.type = 'button';

@@ -47,6 +47,7 @@ function createApp(env = process.env) {
     tz: env.JARVIS_TZ || Intl.DateTimeFormat().resolvedOptions().timeZone,
     hideCalendars: new RegExp(env.JARVIS_HIDE_CALENDARS || 'holiday|transferred from', 'i'),
     windowDays: Math.min(30, Math.max(1, Number(env.CALENDAR_DAYS) || 7)),
+    myEmails: String(env.JARVIS_MY_EMAILS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean),
   };
   cfg.base = (env.BASE_URL || `http://localhost:${cfg.port}`).replace(/\/$/, '');
 
@@ -119,6 +120,8 @@ function createApp(env = process.env) {
       location: e.location || '', link: e.htmlLink || '',
       organizer: (e.organizer && e.organizer.email) || '',
       meet: e.hangoutLink || '',
+      attendees: (e.attendees || []).filter(a => a.email && !a.self && !a.resource).slice(0, 25)
+        .map(a => ({ email: String(a.email).toLowerCase(), name: a.displayName || '' })),
     };
   }
 
@@ -138,6 +141,10 @@ function createApp(env = process.env) {
     }));
   }
 
+  function parseAddr(v) {
+    const m = /<([^>]+)>/.exec(v || '');
+    return String(m ? m[1] : (v || '')).trim().toLowerCase();
+  }
   function parseFrom(v) {
     const m = /^\s*"?([^"<]*?)"?\s*<([^>]+)>/.exec(v || '');
     return (m && (m[1].trim() || m[2])) || (v || '').trim();
@@ -153,7 +160,7 @@ function createApp(env = process.env) {
       const h = n => ((m.payload && m.payload.headers) || []).find(x => x.name.toLowerCase() === n);
       return {
         id: t.id, subject: (h('subject') && h('subject').value) || '(No subject)',
-        from: parseFrom(h('from') && h('from').value), ts: Number(m.internalDate) || 0,
+        from: parseFrom(h('from') && h('from').value), fromEmail: parseAddr(h('from') && h('from').value), ts: Number(m.internalDate) || 0,
         url: `https://mail.google.com/mail/u/${enc(email)}/#inbox/${t.id}`,
       };
     }));
@@ -189,6 +196,9 @@ function createApp(env = process.env) {
 
   function merge(results) {
     const accounts = results.map(r => ({ email: r.email, errors: r.errors }));
+    // Your own addresses (connected accounts plus JARVIS_MY_EMAILS) are not "other people".
+    const mine = new Set([...results.map(r => r.email), ...cfg.myEmails]);
+    for (const r of results) for (const c of r.calendars) for (const e of c.events) e.attendees = e.attendees.filter(a => !mine.has(a.email));
     const calendars = [];
     const seenCal = new Set();
     for (const r of results) {
@@ -222,24 +232,47 @@ function createApp(env = process.env) {
   /* ---------- demo data (DEMO=1) ---------- */
   function demoData() {
     const at = (d, h, m = 0) => { const x = new Date(); x.setDate(x.getDate() + d); x.setHours(h, m, 0, 0); return x.toISOString(); };
-    const ev = (id, title, d, h, m, mins, extra = {}) => ({
-      id, uid: id, title, start: at(d, h, m), end: new Date(new Date(at(d, h, m)).getTime() + mins * 60000).toISOString(),
-      allDay: false, location: '', link: '', organizer: '', meet: '', ...extra,
-    });
+    const P = {
+      jac: { email: 'jacqueline@example.com', name: 'Jacqueline' }, mau: { email: 'maureen@example.com', name: 'Maureen' },
+      dana: { email: 'dana@example.com', name: 'Dana Smith' }, ravi: { email: 'ravi@example.com', name: 'Ravi (OEM)' },
+      meg: { email: 'megan@example.com', name: 'Megan' },
+    };
+    let n = 0;
+    const ev = (title, d, h, m, mins, location = '', people = []) => {
+      const id = 'demo' + (++n);
+      return { id, uid: id, title, start: at(d, h, m), end: new Date(new Date(at(d, h, m)).getTime() + mins * 60000).toISOString(),
+        allDay: false, location, link: '', organizer: '', meet: '', attendees: people.map(p => P[p]) };
+    };
+    const FIFTH = '137 Fifth Ave', GRAHAM = '13326 Graham Rd', COOP = 'Co-operators office, Talbot St';
     return {
       accounts: [{ email: 'demo@example.com', errors: {} }],
       calendars: [
         { id: 'demo@example.com', name: 'demo@example.com', primary: true, account: 'demo@example.com', events: [
-          ev('a', 'Team stand-up', 0, 9, 0, 15), ev('b', 'Client call: product demo', 0, 11, 30, 45), ev('c', 'Pipeline review', 1, 14, 0, 60),
+          ev('Team stand-up', 0, 9, 0, 15, '', ['jac', 'mau']),
+          ev('Client call: product demo', 0, 11, 30, 45, '', ['ravi']),
+          ev('Lunch with Dana', 0, 12, 0, 60, 'Railway City Brewing', ['dana']),
+          ev('Site visit: quote walkthrough', 0, 13, 20, 40, FIFTH, ['dana']),
+          ev('Pipeline review', 1, 14, 0, 60, '', ['ravi']),
+          ev('Volleyball', 1, 18, 30, 90, 'St. Thomas Rec Centre', ['meg']),
+          ev('Quote walkthrough', 2, 10, 0, 30, FIFTH, ['dana']),
+          ev('Payroll and WSIB check', 3, 9, 0, 60),
+          ev('Kids gymnastics', 4, 17, 15, 60, '24 Alexandria Ave', ['meg']),
+          ev('Team meeting', 5, 11, 0, 45, '', ['jac', 'mau']),
         ] },
         { id: 'clean', name: 'Cleaning Schedule', primary: false, account: 'demo@example.com', events: [
-          ev('d', 'House clean, Fifth Ave', 0, 9, 30, 60, { location: '137 Fifth Ave' }), ev('e', 'Office clean', 2, 18, 0, 90),
+          ev('House clean, Fifth Ave', 0, 9, 30, 120, FIFTH, ['jac']),
+          ev('Office clean', 0, 11, 0, 90, COOP, ['mau']),
+          ev('House clean, Graham Rd', 0, 12, 45, 120, GRAHAM, ['mau']),
+          ev('House clean, Fifth Ave', 1, 9, 30, 120, FIFTH, ['jac']),
+          ev('House clean, Graham Rd', 2, 14, 30, 120, GRAHAM, ['mau']),
+          ev('Office clean', 3, 18, 0, 90, COOP, ['mau']),
+          ev('House clean, Fifth Ave', 6, 9, 30, 120, FIFTH, ['jac']),
         ] },
       ],
       mail: { unread: 3, threads: [
-        { id: '1', subject: 'Pricing question for the dealer program', from: 'Dealer partner', ts: Date.now() - 36e5, url: '', account: 'demo@example.com' },
-        { id: '2', subject: 'Demo date confirmed', from: 'OEM contact', ts: Date.now() - 5 * 36e5, url: '', account: 'demo@example.com' },
-        { id: '3', subject: 'Invoice approved', from: 'Finance', ts: Date.now() - 30 * 36e5, url: '', account: 'demo@example.com' },
+        { id: '1', subject: 'Quote for Friday', from: 'Dana Smith', fromEmail: 'dana@example.com', ts: Date.now() - 36e5, url: '', account: 'demo@example.com' },
+        { id: '2', subject: 'Demo date confirmed', from: 'Ravi (OEM)', fromEmail: 'ravi@example.com', ts: Date.now() - 5 * 36e5, url: '', account: 'demo@example.com' },
+        { id: '3', subject: 'Invoice approved', from: 'Finance', fromEmail: 'finance@example.com', ts: Date.now() - 30 * 36e5, url: '', account: 'demo@example.com' },
       ] },
       files: [
         { id: 'f1', name: 'Q1 pipeline', mime: 'application/vnd.google-apps.spreadsheet', modified: at(-1, 16), url: '', account: 'demo@example.com' },
@@ -327,6 +360,20 @@ function createApp(env = process.env) {
       const t = state.mail.threads[0];
       return state.mail.unread ? `${state.mail.unread} unread. Latest: "${t ? t.subject : ''}" from ${t ? t.from : ''}.` : 'No unread mail.';
     }
+    if (/^(conflicts?|clashes|overlaps?)$/.test(l)) {
+      // Same rule as the web view: a clash only counts if you, or one person, is in both events.
+      const primary = new Set(state.calendars.filter(c => c.primary).map(c => c.id));
+      const ev = state.calendars.flatMap(c => c.events.filter(e => !e.allDay && e.end).map(e => ({ ...e, mine: primary.has(c.id) })))
+        .sort((a, b) => new Date(a.start) - new Date(b.start));
+      const shares = (a, b) => (a.mine && b.mine) || a.attendees.some(x => b.attendees.some(y => y.email === x.email));
+      const out = [];
+      for (let i = 0; i < ev.length; i++) {
+        for (let j = i + 1; j < ev.length && new Date(ev[j].start) < new Date(ev[i].end); j++) {
+          if (shares(ev[i], ev[j])) out.push(`${ev[i].title} and ${ev[j].title} (${fmtDay(ev[j].start)} ${fmtTime(ev[j].start)})`);
+        }
+      }
+      return out.length ? `${out.length} overlap${out.length > 1 ? 's' : ''}: ${out.slice(0, 3).join('; ')}.` : 'No overlapping events.';
+    }
     if (/^(files|drive)$/.test(l)) return state.files.length ? `Recently edited: ${state.files.slice(0, 4).map(f => f.name).join(', ')}.` : 'No recent files.';
     if (/^tasks?$/.test(l)) return state.tasks.length ? `${state.tasks.length} open: ${state.tasks.slice(0, 4).map(t => t.text).join('; ')}.` : 'No open tasks.';
     if (/^(report|status)$/.test(l)) {
@@ -408,6 +455,7 @@ function createApp(env = process.env) {
   const STATIC = {
     '/': ['index.html', 'text/html; charset=utf-8'],
     '/app.js': ['app.js', 'text/javascript; charset=utf-8'],
+    '/web.js': ['web.js', 'text/javascript; charset=utf-8'],
     '/style.css': ['style.css', 'text/css; charset=utf-8'],
   };
   const SECURITY = {

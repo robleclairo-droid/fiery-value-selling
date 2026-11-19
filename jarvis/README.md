@@ -6,6 +6,11 @@ A live heads-up display for your Google Calendar, Gmail and Google Drive. It sho
 - **Mail:** unread inbox threads from all accounts, newest first.
 - **Files:** the most recently edited Drive files.
 - **Tasks:** stored on the server, so every open screen updates when you add or remove one.
+- **Web view** (the WEB tab, or `/#web`): every event this week laid out as a spider web. Each ring is a day, with today on the outside, and each spoke is an hour. People and places hang between the events they share. Two kinds of dependency are flagged:
+  - **Overlap** (red): the same person, or you, is booked into two events at once. Two different crews cleaning two houses at the same time is not an overlap.
+  - **Tight hand-off** (amber, dashed): the same person goes straight from one place to another with 45 minutes or less between them.
+
+  Tap any dot to see everything it connects to. Drag people and places to untangle the web, scroll or use + / − to zoom, and filter people, places or the running order.
 - **Host status:** real CPU and memory of the machine running JARVIS, plus a countdown to the next sync.
 - **Ask JARVIS:** quick commands (`schedule`, `cleaning`, `mail`, `files`, `tasks`, `report`). With an Anthropic API key, it also answers free-form questions from your live data. Voice output and dictation use your browser's built-in speech.
 
@@ -88,6 +93,7 @@ All settings go in `jarvis/.env`. See `.env.example` for every option.
 | `CALENDAR_DAYS` | `7` | Days of calendar to show |
 | `JARVIS_HIDE_CALENDARS` | `holiday\|transferred from` | Calendars to hide, matched on name |
 | `JARVIS_TZ` | system time zone | Time zone for spoken answers |
+| `JARVIS_MY_EMAILS` | (none) | Other addresses that are you (for example a personal Gmail), so they aren't shown as other people |
 
 ## Tests
 
@@ -96,4 +102,4 @@ cd jarvis
 node --test
 ```
 
-The tests run the real server against a fake Google API. They cover calendar merging and de-duplication, mail and Drive parsing, a revoked account, the sign-in flow, live task updates and the request protections.
+The tests run the real server against a fake Google API. They cover the web view's overlap and hand-off rules, calendar merging and de-duplication, mail and Drive parsing, a revoked account, the sign-in flow, live task updates and the request protections.
