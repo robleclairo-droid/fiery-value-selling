@@ -30,7 +30,7 @@ function fakeGoogle() {
     if (u.pathname === '/userinfo') return send({ email: 'Second@Example.com' });
     if (u.pathname === '/cal/users/me/calendarList') return send({ items: [
       { id: 'me@example.com', summary: 'me@example.com', primary: true },
-      { id: CLEAN, summary: 'Cleaning Schedule' },
+      { id: CLEAN, summary: 'Cleaning Schedule', backgroundColor: '#33c48d' },
       { id: 'hol', summary: 'Holidays in Canada' },
       { id: 'hidden', summary: 'Hidden one', selected: false },
     ] });
@@ -77,6 +77,10 @@ test('merges calendars, mail and files from Google', async () => {
     const s = t.app.getState();
     assert.deepStrictEqual(s.calendars.map(c => c.name), ['me@example.com', 'Cleaning Schedule'], 'holiday and unselected calendars hidden, primary first');
     const primary = s.calendars[0], clean = s.calendars[1];
+    assert.strictEqual(primary.label, 'example.com', 'main calendar named after its domain');
+    assert.strictEqual(clean.label, 'Cleaning Schedule');
+    assert.strictEqual(clean.color, '#33c48d', 'Google Calendar colour passed through');
+    assert.strictEqual(primary.color, '', 'no colour from Google: the page picks one');
     assert.deepStrictEqual(primary.events.map(e => e.title), ['Volleyball'], 'invite copy of a clean and cancelled event dropped');
     assert.deepStrictEqual(clean.events.map(e => e.title), ['House clean']);
     assert.strictEqual(clean.events[0].location, '137 Fifth Ave');

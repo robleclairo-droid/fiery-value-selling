@@ -3,98 +3,160 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>JARVIS HUD</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@400;500;600&family=Share+Tech+Mono&display=swap">
+<title>JARVIS</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Orbitron:wght@600&display=swap">
 <link rel="stylesheet" href="/style.css">
-<script src="/app.js" defer></script>
 <script src="/web.js" defer></script>
+<script src="/app.js" defer></script>
 </head>
 <body>
-<div id="demo" class="demo" hidden>DEMO DATA. Connect a Google account to see your own calendar, mail and files.</div>
-<header>
-  <div class="brand"><h1>J.A.R.V.I.S.</h1>
-    <nav class="views" aria-label="Views"><a id="v-hud" href="#" aria-current="page">HUD</a><a id="v-web" href="#web">WEB</a></nav>
+<div id="demo" class="demo" hidden>You're looking at demo data. Connect a Google account to see your own calendar, mail and files.</div>
+
+<header class="topbar">
+  <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span class="brand-name">JARVIS</span></div>
+  <nav class="tabs" aria-label="Views">
+    <a id="v-hud" href="#" aria-current="page">Today</a>
+    <a id="v-web" href="#web">Week web</a>
+  </nav>
+  <div class="status">
+    <span class="live" id="live"><i></i><span id="live-text">Connecting</span></span>
+    <span class="sync" id="sync">Not synced yet</span>
+    <button type="button" class="btn ghost" id="refresh" title="Pull fresh data from Google now">Refresh</button>
+    <button type="button" class="avatars" id="acct-btn" aria-label="Accounts"></button>
   </div>
-  <div class="status">LINK <b id="link">CONNECTING</b> · SYNC <b id="sync">--</b> · <b id="up">--</b> HOST UP</div>
 </header>
 
-<main class="grid">
-  <div class="col">
-    <section class="panel"><h2>Local time</h2><div class="big" id="clock">--:--:--</div><div class="date" id="date"></div></section>
-    <div class="col" id="cals"></div>
-    <section class="panel"><h2>Priority tasks <span>synced across screens</span></h2>
-      <ul id="tasks"></ul>
-      <form class="task-add" id="tf"><input id="ti" placeholder="Add a task…" autocomplete="off" aria-label="New task" maxlength="140"><button>ADD</button></form>
-    </section>
-  </div>
-
-  <div class="col center">
-    <div class="reactor" id="reactor" aria-hidden="true">
-      <svg viewBox="0 0 400 400" fill="none" stroke="#4fd8ff">
-        <defs><radialGradient id="core"><stop offset="0" stop-color="#e8fbff"/><stop offset=".35" stop-color="#4fd8ff"/><stop offset="1" stop-color="#4fd8ff" stop-opacity="0"/></radialGradient></defs>
-        <circle cx="200" cy="200" r="190" stroke-opacity=".25"/>
-        <g class="spin" id="ticks"></g>
-        <g class="spin2"><circle cx="200" cy="200" r="150" stroke-width="3" stroke-dasharray="90 40 20 40" stroke-opacity=".8"/><circle cx="200" cy="200" r="138" stroke-opacity=".35"/></g>
-        <circle cx="200" cy="200" r="104" stroke-width="2" stroke-opacity=".7"/>
-        <g class="spin"><circle cx="200" cy="200" r="88" stroke="#ffb347" stroke-width="4" stroke-dasharray="30 22" stroke-opacity=".85"/></g>
-        <g id="coils" stroke-width="2" stroke-opacity=".8"></g>
-        <circle class="pulse" cx="200" cy="200" r="62" fill="url(#core)" stroke="none"/>
-      </svg>
+<main id="hud" class="page">
+  <section class="briefing">
+    <div class="greeting">
+      <h1 id="greet">Good day.</h1>
+      <p id="summary" class="summary">Loading your day…</p>
     </div>
-    <div class="say" id="say" aria-live="polite">Good day. Connecting.</div>
-    <form id="f">
-      <input class="cmd" id="q" placeholder="Ask JARVIS…" autocomplete="off" aria-label="Command" maxlength="500">
-      <button id="mic" type="button" hidden aria-pressed="false" title="Dictate">MIC</button>
-      <button>SEND</button>
-    </form>
-    <div class="chips" id="chips"></div>
-    <button id="voice" class="voice" type="button" hidden aria-pressed="false">VOICE: OFF</button>
-  </div>
+    <div class="cards">
+      <button type="button" class="card stat" id="c-next">
+        <span class="label">Next up</span>
+        <span class="value" id="next-title">—</span>
+        <span class="sub"><b id="next-when"></b> <span id="next-where"></span></span>
+      </button>
+      <div class="card stat" id="c-today">
+        <span class="label">Today</span>
+        <span class="value"><span id="today-count">0</span> <small>events</small></span>
+        <span class="sub" id="today-sub"></span>
+      </div>
+      <a class="card stat" id="c-mail" href="#inbox">
+        <span class="label">Unread mail</span>
+        <span class="value"><span id="mail-count">0</span> <small>threads</small></span>
+        <span class="sub" id="mail-sub"></span>
+      </a>
+      <a class="card stat" id="c-attn" href="#attention">
+        <span class="label">Needs attention</span>
+        <span class="value"><span id="attn-count">0</span> <small id="attn-unit">items</small></span>
+        <span class="sub" id="attn-sub"></span>
+      </a>
+    </div>
+    <div class="cal-toggles" id="cal-toggles" aria-label="Calendars shown"></div>
+  </section>
 
-  <div class="col">
-    <section class="panel"><h2>Unread mail <span id="s-mail"></span></h2><ul id="mail"></ul></section>
-    <section class="panel"><h2>Recent files</h2><ul id="drive"></ul></section>
-    <section class="panel"><h2>Host status <span id="s-host"></span></h2>
-      <div class="row"><span>CPU LOAD</span><b id="cpu">--</b></div><div class="bar"><i id="cpub"></i></div>
-      <div class="row"><span>MEMORY</span><b id="mem">--</b></div><div class="bar"><i id="memb"></i></div>
-      <div class="row"><span>NEXT SYNC</span><b id="next">--</b></div><div class="bar"><i id="nextb"></i></div>
-    </section>
-    <section class="panel"><h2>Accounts</h2><ul id="accts"></ul><a class="add" id="add" href="/auth/google">+ CONNECT GOOGLE ACCOUNT</a></section>
-    <section class="panel"><h2>Alerts</h2><ul id="alerts"></ul></section>
+  <div class="layout">
+    <div class="main-col">
+      <section class="card panel">
+        <div class="panel-head"><h2>Today</h2><span class="hint" id="today-date"></span></div>
+        <div class="allday" id="allday"></div>
+        <div class="lane-heads" id="lane-heads" hidden></div>
+        <div class="timeline" id="timeline" aria-label="Today's timeline"></div>
+      </section>
+      <section class="card panel">
+        <div class="panel-head"><h2>Coming up</h2><span class="hint" id="upcoming-hint"></span></div>
+        <div id="upcoming"></div>
+      </section>
+    </div>
+
+    <aside class="side-col">
+      <section class="card panel ask">
+        <div class="ask-head">
+          <svg class="reactor" viewBox="0 0 100 100" aria-hidden="true">
+            <circle cx="50" cy="50" r="46" class="r1"/><circle cx="50" cy="50" r="34" class="r2"/><circle cx="50" cy="50" r="22" class="r3"/><circle cx="50" cy="50" r="12" class="core"/>
+          </svg>
+          <div><h2>Ask JARVIS</h2><p class="say" id="say" aria-live="polite">Connecting…</p></div>
+        </div>
+        <form id="f" class="ask-form">
+          <input id="q" placeholder="When's my next clean?" autocomplete="off" aria-label="Ask JARVIS" maxlength="500">
+          <button type="button" class="btn icon" id="mic" hidden aria-pressed="false" title="Dictate" aria-label="Dictate">🎙</button>
+          <button class="btn primary">Ask</button>
+        </form>
+        <div class="chips" id="chips"></div>
+        <label class="voice" id="voice-wrap" hidden><input type="checkbox" id="voice"> Read answers aloud</label>
+      </section>
+
+      <section class="card panel" id="attention">
+        <div class="panel-head"><h2>Needs attention</h2><a class="hint link" href="#web">See the web</a></div>
+        <ul class="rows" id="attn-list"></ul>
+      </section>
+
+      <section class="card panel" id="inbox">
+        <div class="panel-head"><h2>Unread mail</h2><span class="hint" id="mail-hint"></span></div>
+        <ul class="rows" id="mail"></ul>
+      </section>
+
+      <section class="card panel">
+        <div class="panel-head"><h2>Tasks</h2><span class="hint">shared across your screens</span></div>
+        <ul class="rows" id="tasks"></ul>
+        <form class="add-row" id="tf"><input id="ti" placeholder="Add a task" autocomplete="off" aria-label="New task" maxlength="140"><button class="btn">Add</button></form>
+      </section>
+
+      <section class="card panel">
+        <div class="panel-head"><h2>Recent files</h2></div>
+        <ul class="rows" id="drive"></ul>
+      </section>
+    </aside>
   </div>
+  <footer class="foot" id="host"></footer>
 </main>
 
-<section class="webview" id="webview" aria-label="Schedule web">
-  <div class="web-stage">
-    <canvas id="web-canvas" aria-label="Spider web of this week's events, people and places. The list beside it has the same information."></canvas>
+<section class="webview page" id="webview" aria-label="Week web">
+  <div class="web-stage card">
+    <canvas id="web-canvas" aria-label="Spider web of this week's events, people and places. The panel beside it lists the same information."></canvas>
     <div class="web-tools">
-      <button type="button" id="w-in" aria-label="Zoom in">+</button>
-      <button type="button" id="w-out" aria-label="Zoom out">−</button>
-      <button type="button" id="w-reset">RESET</button>
+      <button type="button" class="btn" id="w-in" aria-label="Zoom in">+</button>
+      <button type="button" class="btn" id="w-out" aria-label="Zoom out">−</button>
+      <button type="button" class="btn" id="w-reset">Reset</button>
     </div>
-    <p class="web-hint">Rings are days (today on the outside) · spokes are hours · the amber hand is now</p>
   </div>
   <aside class="web-side">
-    <section class="panel"><h2>This week</h2><p class="msg w-sumline" id="w-sum"></p>
-      <div class="w-stats"><div><b id="w-conf">0</b><span>overlaps</span></div><div><b id="w-tight">0</b><span>tight hand-offs</span></div></div>
-      <ul id="w-watch"></ul>
+    <section class="card panel howto">
+      <h2>How to read the web</h2>
+      <ul class="howto-list">
+        <li><b>Rings are days.</b> Today is the outer ring; each ring inward is a day later.</li>
+        <li><b>Spokes are hours.</b> Midnight is at the top, noon at the bottom. The amber hand is now.</li>
+        <li><b>Dots are events,</b> in their calendar's colour. <span class="kp">◯ people</span> and <span class="kl">◇ places</span> link the events they share.</li>
+        <li><span class="kc">Red line</span>: someone is double-booked. <span class="kt">Dashed amber</span>: 45 min or less to get between two places.</li>
+      </ul>
     </section>
-    <section class="panel"><h2>Selected</h2><div id="w-detail"></div></section>
-    <section class="panel"><h2>Most connected</h2><ul id="w-hubs"></ul></section>
-    <section class="panel"><h2>Show</h2>
+    <section class="card panel">
+      <div class="panel-head"><h2>This week</h2></div>
+      <p class="hint" id="w-sum"></p>
+      <div class="w-stats"><div><b id="w-conf">0</b><span>double-bookings</span></div><div><b id="w-tight">0</b><span>tight hand-offs</span></div></div>
+      <ul class="rows" id="w-watch"></ul>
+    </section>
+    <section class="card panel"><div class="panel-head"><h2>Selected</h2></div><div id="w-detail"></div></section>
+    <section class="card panel"><div class="panel-head"><h2>Most connected</h2></div><ul class="rows" id="w-hubs"></ul></section>
+    <section class="card panel">
+      <div class="panel-head"><h2>Show</h2></div>
       <div class="w-filters">
         <label><input type="checkbox" id="wf-people" checked> People</label>
         <label><input type="checkbox" id="wf-places" checked> Places</label>
         <label><input type="checkbox" id="wf-seq" checked> Running order</label>
         <label><input type="checkbox" id="wf-shared"> Shared only</label>
       </div>
-      <ul class="w-key">
-        <li><i class="k-person"></i>Person</li><li><i class="k-place"></i>Place</li>
-        <li><i class="k-conf"></i>Overlap</li><li><i class="k-tight"></i>Tight hand-off</li><li><i class="k-next"></i>Running order</li>
-      </ul>
       <ul class="w-key" id="w-legend"></ul>
     </section>
   </aside>
 </section>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-modal="true" role="dialog" aria-labelledby="drawer-title">
+  <button type="button" class="btn ghost drawer-close" id="drawer-close" aria-label="Close">✕</button>
+  <div id="drawer-body"></div>
+</aside>
 </body>
 </html>

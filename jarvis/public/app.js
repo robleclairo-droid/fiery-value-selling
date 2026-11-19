@@ -1,237 +1,585 @@
 'use strict';
+/* JARVIS front end: renders the server snapshot (calendars, mail, files, tasks) and keeps it live over SSE. */
 const $ = id => document.getElementById(id);
-const p2 = n => String(n).padStart(2, '0');
-let S = null, SYS = null;
+const PALETTE = ['#4fa3ff', '#33c48d', '#b48cff', '#ffb347', '#ff7ac6', '#ffd84f', '#4fd8ff'];
+const DAY = 864e5;
+let RAW = null;   // snapshot exactly as the server sent it
+let S = null;     // snapshot with hidden calendars removed
+let G = null;     // dependency graph (overlaps, tight hand-offs) from web.js
+let SYS = null;
+let linkUp = false;
 
-/* ---------- safe DOM helpers: all remote text goes through textContent ---------- */
+/* ---------- small helpers ---------- */
 function el(tag, cls, text) {
   const e = document.createElement(tag);
   if (cls) e.className = cls;
-  if (text !== undefined) e.textContent = text;
+  if (text !== undefined && text !== null) e.textContent = text;
   return e;
 }
-function link(text, href) {
+function safeLink(text, href, cls) {
   if (typeof href === 'string' && /^https:\/\//.test(href)) {
-    const a = el('a', '', text); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; return a;
+    const a = el('a', cls || '', text); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; return a;
   }
-  return document.createTextNode(text);
+  return el('span', cls || '', text);
 }
-function item(tagText, tagCls, main, sub, href) {
-  const li = el('li');
-  li.appendChild(el('time', tagCls || '', tagText));
-  const t = el('span', 't');
-  t.appendChild(link(main, href));
-  if (sub) t.appendChild(el('small', '', sub));
-  li.appendChild(t);
-  return li;
-}
-function setList(ul, items, empty) {
-  ul.replaceChildren();
-  if (!items.length) ul.appendChild(el('li', 'msg', empty));
-  else items.forEach(i => ul.appendChild(i));
+function store(key, val) {
+  try { if (val === undefined) return JSON.parse(localStorage.getItem(key) || 'null'); localStorage.setItem(key, JSON.stringify(val)); } catch (e) { return null; }
 }
 async function post(url, body) {
   const r = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'x-jarvis': '1' }, body: JSON.stringify(body || {}) });
   if (!r.ok) throw new Error('HTTP ' + r.status);
   return r.json();
 }
-
-/* ---------- reactor decoration ---------- */
-(function () {
-  let t = '';
-  for (let i = 0; i < 72; i++) {
-    const a = i * 5 * Math.PI / 180, r1 = i % 6 ? 176 : 168, r2 = 182;
-    t += `<line x1="${200 + r1 * Math.cos(a)}" y1="${200 + r1 * Math.sin(a)}" x2="${200 + r2 * Math.cos(a)}" y2="${200 + r2 * Math.sin(a)}" stroke-opacity="${i % 6 ? .4 : .9}"/>`;
-  }
-  $('ticks').innerHTML = t;
-  let c = '';
-  for (let i = 0; i < 10; i++) {
-    const a = i * 36 * Math.PI / 180, P = (r, d) => `${200 + r * Math.cos(a + d)} ${200 + r * Math.sin(a + d)}`;
-    c += `<path d="M${P(66, -.12)}L${P(100, -.12)}L${P(100, .12)}L${P(66, .12)}Z"/>`;
-  }
-  $('coils').innerHTML = c;
-})();
-
-/* ---------- time helpers ---------- */
 function parse(iso, allDay) {
   if (!iso) return null;
-  if (allDay && /^\d{4}-\d{2}-\d{2}$/.test(iso)) { const [y, m, d] = iso.split('-').map(Number); return new Date(y, m - 1, d); }
-  return new Date(iso);
+  if (allDay && /^\d{4}-\d{2}-\d{2}$/.test(iso)) { const [y, m, d] = iso.split('-').map(Number); return new Date(y, m - 1, d).getTime(); }
+  const t = new Date(iso).getTime();
+  return isNaN(t) ? null : t;
 }
-function dayLabel(d) {
-  const n = new Date(), t0 = new Date(n.getFullYear(), n.getMonth(), n.getDate()), d0 = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const diff = Math.round((d0 - t0) / 864e5);
-  return diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+const sod = t => { const d = new Date(t); return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); };
+const dayIndex = t => Math.round((sod(t) - sod(Date.now())) / DAY);
+const fmtT = t => new Date(t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+function dayName(t) {
+  const i = dayIndex(t);
+  if (i === 0) return 'Today';
+  if (i === 1) return 'Tomorrow';
+  if (i === -1) return 'Yesterday';
+  return new Date(t).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 }
-const hm = d => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-function ago(ts) {
-  const s = Math.max(0, Math.round((Date.now() - ts) / 1000));
-  return s < 60 ? s + 's ago' : s < 3600 ? Math.round(s / 60) + 'm ago' : Math.round(s / 3600) + 'h ago';
+function longDay(t) { return new Date(t).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }); }
+function durText(min) { const h = Math.floor(min / 60), m = min % 60; return h ? (m ? `${h} h ${m} min` : `${h} h`) : `${m} min`; }
+function ago(t) {
+  const s = Math.max(0, Math.round((Date.now() - t) / 1000));
+  if (s < 60) return 'just now';
+  if (s < 3600) return Math.round(s / 60) + ' min ago';
+  if (s < DAY / 1000) return Math.round(s / 3600) + ' h ago';
+  return dayName(t);
 }
+function until(t) {
+  const m = Math.round((t - Date.now()) / 60000);
+  if (m <= 0) return 'now';
+  if (m < 60) return `in ${m} min`;
+  if (m < 24 * 60 && dayIndex(t) === 0) return `in ${durText(m)}`;
+  return `${dayName(t)} ${fmtT(t)}`;
+}
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+const isClean = c => /clean/i.test(c.label || c.name);
 
-/* ---------- renderers ---------- */
-function renderCals() {
-  const box = $('cals'); box.replaceChildren();
-  const now = Date.now();
-  if (!S.calendars.length) {
-    const sec = el('section', 'panel'); sec.appendChild(el('h2', '', 'Schedule'));
-    const ul = el('ul'); setList(ul, [], S.accounts.length ? 'No calendars found.' : 'Connect a Google account to load your calendars.');
-    sec.appendChild(ul); box.appendChild(sec); return;
-  }
-  for (const c of S.calendars) {
-    const sec = el('section', 'panel');
-    const h = el('h2', '', c.primary ? 'Schedule' : c.name);
-    const sub = el('span', '', c.primary ? c.account : `${c.events.length} in next ${S.windowDays || 7} days`);
-    sub.title = c.primary ? c.account : c.name;
-    h.appendChild(sub); sec.appendChild(h);
-    const upcoming = c.events.filter(e => { const end = parse(e.end, e.allDay); return !end || end.getTime() > now; });
-    const ul = el('ul');
-    setList(ul, upcoming.slice(0, 8).map(e => {
-      const s = parse(e.start, e.allDay), end = parse(e.end, e.allDay);
-      const live = s && s.getTime() <= now && (!end || end.getTime() > now);
-      const tag = live ? 'NOW' : e.allDay ? 'ALL DAY' : hm(s);
-      const where = [dayLabel(s), e.location].filter(Boolean).join(' · ');
-      return item(tag, live ? 'warn' : '', e.title, where, e.link);
-    }), 'Nothing booked.');
-    sec.appendChild(ul); box.appendChild(sec);
-  }
+/* ---------- state shaping ---------- */
+let hidden = new Set(store('jarvis-hidden-cals') || []);
+function normalise(raw) {
+  raw.calendars.forEach((c, i) => { c.color = c.color || PALETTE[i % PALETTE.length]; c.label = c.label || c.name; });
+  return raw;
 }
-function renderMail() {
-  $('s-mail').textContent = S.mail.unread ? `${S.mail.unread} unread` : '';
-  setList($('mail'), S.mail.threads.map(t => {
-    const d = new Date(t.ts), today = d.toDateString() === new Date().toDateString();
-    const when = today ? hm(d) : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-    const sub = S.accounts.length > 1 ? `${t.from} · ${t.account}` : t.from;
-    return item(when, '', t.subject, sub, t.url);
-  }), S.accounts.length ? 'No unread mail.' : 'No account connected.');
+function accountColor(email) {
+  const c = RAW && RAW.calendars.find(x => x.primary && x.account === email);
+  if (c) return c.color;
+  const i = RAW ? RAW.accounts.findIndex(a => a.email === email) : 0;
+  return PALETTE[(i + 3) % PALETTE.length];
 }
-function mimeTag(m) {
-  return /folder/.test(m) ? 'DIR' : /spreadsheet/.test(m) ? 'SHEET' : /document/.test(m) ? 'DOC' : /presentation/.test(m) ? 'DECK' : /pdf/.test(m) ? 'PDF' : 'FILE';
+function accountLabel(email) {
+  const c = RAW && RAW.calendars.find(x => x.primary && x.account === email);
+  return c ? c.label : email;
 }
-function renderFiles() {
-  setList($('drive'), S.files.map(f => item(mimeTag(f.mime || ''), '', f.name,
-    'Edited ' + new Date(f.modified).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }), f.url)),
-  S.accounts.length ? 'No recent files.' : 'No account connected.');
-}
-function renderTasks() {
-  setList($('tasks'), S.tasks.map((t, i) => {
-    const li = el('li');
-    li.appendChild(el('span', 'tag', p2(i + 1)));
-    li.appendChild(el('span', 't', t.text));
-    const x = el('button', 'x', '✕'); x.type = 'button'; x.setAttribute('aria-label', 'Remove task');
-    x.addEventListener('click', () => post('/api/tasks/delete', { id: t.id }).catch(() => say('Could not remove that task. Check the server is running.')));
-    li.appendChild(x);
-    return li;
-  }), 'No open tasks. Add one below.');
-}
-function renderAccounts() {
-  setList($('accts'), S.accounts.map(a => {
-    const errs = Object.entries(a.errors || {});
-    const li = el('li');
-    li.appendChild(el('span', 'tag ' + (errs.length ? 'warn' : ''), errs.length ? 'CHECK' : 'OK'));
-    const t = el('span', 't', a.email);
-    if (errs.length) t.appendChild(el('small', '', errs.map(([k, v]) => `${k}: ${v}`).join(' · ')));
-    li.appendChild(t);
-    if (!S.demo) {
-      const x = el('button', 'x', '✕'); x.type = 'button'; x.setAttribute('aria-label', 'Disconnect ' + a.email);
-      let armed = false;
-      x.addEventListener('click', () => {
-        if (!armed) { armed = true; x.textContent = 'REMOVE?'; setTimeout(() => { armed = false; x.textContent = '✕'; }, 4000); return; }
-        post('/auth/remove', { email: a.email }).catch(() => say('Could not disconnect that account.'));
-      });
-      li.appendChild(x);
-    }
-    return li;
-  }), S.configured ? 'No accounts yet.' : 'Google sign-in is not set up on the server yet. See the README.');
-  $('add').hidden = !!S.demo;
-}
-function renderAlerts() {
-  const out = [], now = Date.now();
-  const soon = S.calendars.flatMap(c => c.events).filter(e => !e.allDay)
-    .map(e => ({ e, d: parse(e.start) })).filter(x => x.d - now > 0 && x.d - now < 3600e3)
-    .sort((a, b) => a.d - b.d)[0];
-  if (soon) out.push(item('SOON', 'warn', `${soon.e.title} in ${Math.round((soon.d - now) / 60000)} min`));
-  const clean = S.calendars.find(c => /clean/i.test(c.name));
-  if (clean) {
-    const n = clean.events.filter(e => { const d = parse(e.start, e.allDay); return d && d.toDateString() === new Date().toDateString(); }).length;
-    if (n) out.push(item('CLEAN', '', `${n} clean${n > 1 ? 's' : ''} today`));
-  }
-  if (S.mail.unread) out.push(item('MAIL', '', `${S.mail.unread} unread`));
-  if (S.tasks.length) out.push(item('TASK', '', `${S.tasks.length} open task${S.tasks.length > 1 ? 's' : ''}`));
-  S.accounts.filter(a => Object.keys(a.errors || {}).length).forEach(a => out.push(item('LINK', 'crit', `${a.email} needs attention`)));
-  if (!linkUp) out.push(item('LINK', 'crit', 'Lost connection to the JARVIS server. Retrying.'));
-  setList($('alerts'), out, 'All clear.');
-}
-function renderAll() {
-  if (!S) return;
-  $('demo').hidden = !S.demo;
-  renderCals(); renderMail(); renderFiles(); renderTasks(); renderAccounts(); renderAlerts();
-}
-function renderSys() {
-  if (!SYS) return;
-  $('cpu').textContent = SYS.cpu + '%'; $('cpub').style.width = SYS.cpu + '%';
-  $('mem').textContent = SYS.mem + '%'; $('memb').style.width = SYS.mem + '%';
-  $('s-host').textContent = `${SYS.cores} cores · load ${SYS.load}`;
-  const h = Math.floor(SYS.uptime / 3600);
-  $('up').textContent = h >= 24 ? Math.floor(h / 24) + 'D ' + (h % 24) + 'H' : h + 'H ' + Math.floor(SYS.uptime / 60) % 60 + 'M';
-}
-function tickSync() {
-  if (!SYS) return;
-  $('sync').textContent = SYS.syncedAt ? ago(SYS.syncedAt).toUpperCase() : 'PENDING';
-  const left = Math.max(0, Math.round((SYS.nextAt - Date.now()) / 1000));
-  $('next').textContent = left + 's';
-  $('nextb').style.width = (100 * (1 - left / SYS.pollSeconds)) + '%';
-}
-
-/* ---------- live link ---------- */
-let linkUp = false;
-function setLink(up) {
-  linkUp = up;
-  const b = $('link'); b.textContent = up ? 'LIVE' : 'RECONNECTING'; b.classList.toggle('bad', !up);
-  if (S) renderAlerts();
-}
-let first = true;
-const es = new EventSource('/api/stream');
-es.onopen = () => setLink(true);
-es.onerror = () => setLink(false);
-es.addEventListener('snapshot', ev => {
-  S = JSON.parse(ev.data);
+function applyView() {
+  S = Object.assign({}, RAW, { calendars: RAW.calendars.filter(c => !hidden.has(c.id)) });
+  G = window.JarvisWeb ? window.JarvisWeb.buildGraph(S, Date.now()) : null;
   window.JARVIS_STATE = S;
   window.dispatchEvent(new CustomEvent('jarvis:snapshot', { detail: S }));
-  renderAll();
+}
+const evKey = (c, e) => `e:${c.id}:${e.id}:${e.start}`;
+function allEvents() {
+  const out = [];
+  for (const c of S.calendars) for (const e of c.events) {
+    const s = parse(e.start, e.allDay); if (s === null) continue;
+    const en = parse(e.end, e.allDay) || s + 36e5;
+    out.push({ c, e, s, en, key: evKey(c, e) });
+  }
+  return out.sort((a, b) => a.s - b.s);
+}
+function flags(key) {
+  const f = { red: [], amber: [] };
+  if (!G) return f;
+  for (const l of G.conflicts) if (l.a.key === key || l.b.key === key) f.red.push(l);
+  for (const l of G.tight) if (l.a.key === key || l.b.key === key) f.amber.push(l);
+  return f;
+}
+
+/* ---------- top bar ---------- */
+function renderTop() {
+  const live = $('live');
+  live.className = 'live ' + (linkUp ? 'on' : 'off');
+  $('live-text').textContent = linkUp ? 'Live' : 'Reconnecting';
+  $('sync').textContent = SYS && SYS.syncedAt ? 'Synced ' + ago(SYS.syncedAt) : 'Not synced yet';
+  const box = $('acct-btn'); box.replaceChildren();
+  if (!RAW) return;
+  RAW.accounts.forEach(a => {
+    const av = el('span', 'av' + (Object.keys(a.errors || {}).length ? ' warn' : ''), a.email[0].toUpperCase());
+    av.style.background = accountColor(a.email); av.title = a.email;
+    box.appendChild(av);
+  });
+  if (!RAW.accounts.length) box.appendChild(el('span', 'av add', '+'));
+  box.title = RAW.accounts.length ? 'Accounts: ' + RAW.accounts.map(a => a.email).join(', ') : 'Connect a Google account';
+}
+
+/* ---------- briefing ---------- */
+function summaryParts() {
+  const now = Date.now();
+  const today = allEvents().filter(x => dayIndex(x.s) === 0 || (x.s < sod(now) && x.en > now));
+  const cleans = today.filter(x => isClean(x.c)).length;
+  const next = allEvents().find(x => !x.e.allDay && x.en > now);
+  const parts = [];
+  if (!RAW.accounts.length && !RAW.demo) return [['Connect a Google account to bring your calendar, mail and files in. Click the '], ['+', 1], [' at the top right.']];
+  if (today.length) {
+    parts.push(['You have '], [plural(today.length, 'event'), 1], [' today']);
+    if (cleans) parts.push([', including '], [plural(cleans, 'clean'), 1]);
+    parts.push(['. ']);
+  } else parts.push(['Nothing on your calendar today. ']);
+  if (next) {
+    const live = next.s <= now;
+    parts.push([live ? 'Happening now: ' : 'Next: '], [next.e.title, 1], [live ? `, until ${fmtT(next.en)}. ` : ` ${until(next.s)}${dayIndex(next.s) === 0 ? ' (' + fmtT(next.s) + ')' : ''}. `]);
+  }
+  if (S.mail.unread) parts.push([plural(S.mail.unread, 'unread thread'), 1], ['. ']);
+  if (G && (G.conflicts.length || G.tight.length)) {
+    const bits = [];
+    if (G.conflicts.length) bits.push(plural(G.conflicts.length, 'double-booking'));
+    if (G.tight.length) bits.push(plural(G.tight.length, 'tight hand-off'));
+    parts.push([bits.join(' and '), 1], [' this week need a look.']);
+  }
+  return parts;
+}
+function renderBriefing() {
+  const h = new Date().getHours();
+  $('greet').textContent = h < 5 ? 'Working late.' : h < 12 ? 'Good morning.' : h < 17 ? 'Good afternoon.' : 'Good evening.';
+  const sum = $('summary'); sum.replaceChildren();
+  summaryParts().forEach(([t, b]) => sum.appendChild(b ? el('b', '', t) : document.createTextNode(t)));
+
+  const now = Date.now();
+  const evs = allEvents();
+  const next = evs.find(x => !x.e.allDay && x.en > now);
+  $('next-title').textContent = next ? next.e.title : 'Nothing scheduled';
+  $('next-when').textContent = next ? (next.s <= now ? `Now, until ${fmtT(next.en)}` : until(next.s)) : '';
+  $('next-where').textContent = next ? (next.e.location ? '· ' + next.e.location.split(',')[0] : '· ' + next.c.label) : 'this week';
+  $('c-next').onclick = () => next && openEvent(next.key);
+  $('c-next').disabled = !next;
+
+  const today = evs.filter(x => dayIndex(x.s) === 0);
+  const left = today.filter(x => x.en > now).length;
+  const cleans = today.filter(x => isClean(x.c)).length;
+  $('today-count').textContent = today.length;
+  $('today-sub').textContent = today.length ? [cleans ? plural(cleans, 'clean') : '', left === today.length ? 'none done yet' : `${left} still to go`].filter(Boolean).join(' · ') : 'Free day';
+
+  $('mail-count').textContent = S.mail.unread;
+  const perAcct = {};
+  S.mail.threads.forEach(t => { perAcct[t.account] = (perAcct[t.account] || 0) + 1; });
+  $('mail-sub').textContent = RAW.accounts.length > 1 ? Object.entries(perAcct).map(([a, n]) => `${n} ${accountLabel(a)}`).join(' · ') : (S.mail.threads[0] ? 'Latest from ' + S.mail.threads[0].from : 'Inbox zero');
+
+  const nc = G ? G.conflicts.length : 0, nt = G ? G.tight.length : 0;
+  $('attn-count').textContent = nc + nt;
+  $('attn-unit').textContent = nc + nt === 1 ? 'item' : 'items';
+  $('attn-sub').textContent = nc + nt ? [nc ? plural(nc, 'double-booking') : '', nt ? plural(nt, 'tight hand-off') : ''].filter(Boolean).join(' · ') : 'All clear this week';
+  $('c-attn').classList.toggle('has-red', !!nc);
+  $('c-attn').classList.toggle('has-amber', !nc && !!nt);
+}
+
+/* ---------- calendar toggles ---------- */
+function renderToggles() {
+  const box = $('cal-toggles'); box.replaceChildren();
+  if (!RAW.calendars.length) return;
+  box.appendChild(el('span', 'lbl', 'Calendars'));
+  RAW.calendars.forEach(c => {
+    const on = !hidden.has(c.id);
+    const b = el('button', 'chip'); b.type = 'button';
+    b.setAttribute('aria-pressed', String(on));
+    b.title = (on ? 'Hide ' : 'Show ') + c.label + (c.primary ? ` (${c.account})` : '');
+    const dot = el('span', 'dot'); dot.style.background = c.color;
+    b.append(dot, document.createTextNode(c.label));
+    b.addEventListener('click', () => {
+      if (on) hidden.add(c.id); else hidden.delete(c.id);
+      store('jarvis-hidden-cals', [...hidden]);
+      applyView(); renderAll();
+    });
+    box.appendChild(b);
+  });
+}
+
+/* ---------- today timeline ---------- */
+const PX = 64; // pixels per hour
+function renderTimeline() {
+  const now = Date.now(), t0 = sod(now), t1 = t0 + DAY;
+  $('today-date').textContent = longDay(now);
+  const evs = allEvents().filter(x => x.en > t0 && x.s < t1);
+  const allDay = evs.filter(x => x.e.allDay);
+  const timed = evs.filter(x => !x.e.allDay).map(x => Object.assign({}, x, { vs: Math.max(x.s, t0), ve: Math.min(x.en, t1) }));
+
+  const ad = $('allday'); ad.replaceChildren();
+  allDay.forEach(x => {
+    const p = el('button', 'pill', x.e.title); p.type = 'button'; p.style.setProperty('--c', x.c.color);
+    p.addEventListener('click', () => openEvent(x.key)); ad.appendChild(p);
+  });
+
+  const tl = $('timeline'); tl.replaceChildren();
+  if (!timed.length) { tl.style.height = 'auto'; tl.appendChild(el('p', 'empty', allDay.length ? 'No timed events today.' : 'Nothing on your calendar today.')); return; }
+  const hourOf = t => (t - t0) / 36e5;
+  let startH = Math.min(8, Math.floor(Math.min(...timed.map(x => hourOf(x.vs)))));
+  let endH = Math.max(18, Math.ceil(Math.max(...timed.map(x => hourOf(x.ve)))));
+  const nowH = hourOf(now);
+  startH = Math.max(0, Math.min(startH, Math.floor(nowH))); endH = Math.min(24, Math.max(endH, Math.ceil(nowH + 0.01)));
+  tl.style.height = (endH - startH) * PX + 'px';
+
+  for (let h = startH; h <= endH; h++) {
+    const line = el('div', 'hour'); line.style.top = (h - startH) * PX + 'px';
+    if (h < endH) line.appendChild(el('span', '', new Date(t0 + h * 36e5).toLocaleTimeString([], { hour: 'numeric' })));
+    tl.appendChild(line);
+  }
+
+  // Two lanes: your own calendars, and shared ones (like the Cleaning Schedule), so the crews' jobs
+  // don't squeeze your day. Inside a lane, events that overlap sit side by side.
+  const yours = timed.filter(x => x.c.primary), others = timed.filter(x => !x.c.primary);
+  const otherCals = [...new Set(others.map(x => x.c.label))];
+  const lanes = yours.length && others.length
+    ? [{ label: 'Your calendars', items: yours }, { label: otherCals.length === 1 ? otherCals[0] : 'Shared calendars', items: others }]
+    : [{ label: '', items: timed }];
+  const heads = $('lane-heads'); heads.replaceChildren();
+  heads.hidden = lanes.length < 2;
+  lanes.forEach((lane, li) => {
+    heads.appendChild(el('span', '', lane.label));
+    let cluster = [], cols = [], clusterEnd = -Infinity;
+    const flush = () => { cluster.forEach(x => { x.ncol = cols.length; }); cluster = []; cols = []; };
+    lane.items.sort((a, b) => a.vs - b.vs || b.ve - a.ve).forEach(x => {
+      if (x.vs >= clusterEnd) { flush(); clusterEnd = -Infinity; }
+      let col = cols.findIndex(end => end <= x.vs);
+      if (col < 0) { col = cols.length; cols.push(x.ve); } else cols[col] = x.ve;
+      x.col = col; x.lane = li; cluster.push(x); clusterEnd = Math.max(clusterEnd, x.ve);
+    });
+    flush();
+  });
+  const laneW = 100 / lanes.length;
+  for (let i = 1; i < lanes.length; i++) { const d = el('div', 'lane-split'); d.style.left = i * laneW + '%'; tl.appendChild(d); }
+
+  timed.forEach(x => {
+    const top = (hourOf(x.vs) - startH) * PX, height = Math.max(24, (x.ve - x.vs) / 36e5 * PX - 3);
+    const f = flags(x.key);
+    const b = el('button', 'ev'); b.type = 'button';
+    b.style.setProperty('--c', x.c.color);
+    b.style.top = top + 'px'; b.style.height = height + 'px';
+    b.style.left = `calc(${x.lane * laneW + (x.col / x.ncol) * laneW}% + 3px)`; b.style.width = `calc(${laneW / x.ncol}% - 6px)`;
+    if (x.en < now) b.classList.add('past');
+    if (height < 38) b.classList.add('short');
+    if (f.red.length) b.classList.add('flag-red'); else if (f.amber.length) b.classList.add('flag-amber');
+    b.appendChild(el('span', 't', x.e.title));
+    const meta = el('span', 'm');
+    if (x.s <= now && x.en > now) meta.appendChild(el('span', 'badge live', 'Now'));
+    if (f.red.length) meta.appendChild(el('span', 'badge red', 'Double-booked'));
+    if (f.amber.length) meta.appendChild(el('span', 'badge amber', 'Tight'));
+    meta.appendChild(document.createTextNode(` ${fmtT(x.s)}–${fmtT(x.en)}${x.e.location ? ' · ' + x.e.location.split(',')[0] : ''}`));
+    b.appendChild(meta);
+    b.title = `${x.e.title}\n${fmtT(x.s)}–${fmtT(x.en)} · ${x.c.label}`;
+    b.setAttribute('aria-label', `${x.e.title}, ${fmtT(x.s)} to ${fmtT(x.en)}, ${x.c.label}${f.red.length ? ', double-booked' : ''}${f.amber.length ? ', tight hand-off' : ''}`);
+    b.addEventListener('click', () => openEvent(x.key));
+    tl.appendChild(b);
+  });
+
+  if (nowH >= startH && nowH <= endH) {
+    const n = el('div', 'now'); n.style.top = (nowH - startH) * PX + 'px';
+    n.appendChild(el('span', '', 'Now ' + fmtT(now)));
+    tl.appendChild(n);
+  }
+}
+
+/* ---------- coming up ---------- */
+function renderUpcoming() {
+  const box = $('upcoming'); box.replaceChildren();
+  const days = (RAW.windowDays || 7) - 1;
+  $('upcoming-hint').textContent = `next ${plural(days, 'day')}`;
+  const groups = new Map();
+  allEvents().filter(x => dayIndex(x.s) >= 1).forEach(x => {
+    const k = dayIndex(x.s); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(x);
+  });
+  if (!groups.size) { box.appendChild(el('p', 'empty', 'Nothing else on your calendars this week.')); return; }
+  [...groups.keys()].sort((a, b) => a - b).forEach(k => {
+    const list = groups.get(k).sort((a, b) => Number(b.e.allDay) - Number(a.e.allDay) || a.s - b.s);
+    const sec = el('div', 'day');
+    const h = el('h3');
+    h.appendChild(el('b', '', k === 1 ? 'Tomorrow · ' + new Date(list[0].s).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : longDay(list[0].s)));
+    const cl = list.filter(x => isClean(x.c)).length;
+    h.appendChild(el('span', '', plural(list.length, 'event') + (cl ? ` · ${plural(cl, 'clean')}` : '')));
+    sec.appendChild(h);
+    list.forEach(x => {
+      const f = flags(x.key);
+      const row = el('button', 'up'); row.type = 'button'; row.style.setProperty('--c', x.c.color);
+      row.appendChild(el('time', '', x.e.allDay ? 'All day' : fmtT(x.s)));
+      row.appendChild(el('span', 'dot'));
+      const t = el('span', 't', x.e.title);
+      if (x.e.location) t.appendChild(el('small', '', x.e.location.split(',')[0]));
+      row.appendChild(t);
+      const badges = el('span', 'badges');
+      if (f.red.length) badges.appendChild(el('span', 'badge red', 'Double-booked'));
+      else if (f.amber.length) badges.appendChild(el('span', 'badge amber', 'Tight'));
+      row.appendChild(badges);
+      row.title = x.c.label;
+      row.addEventListener('click', () => openEvent(x.key));
+      sec.appendChild(row);
+    });
+    box.appendChild(sec);
+  });
+}
+
+/* ---------- needs attention ---------- */
+function renderAttention() {
+  const ul = $('attn-list'); ul.replaceChildren();
+  const add = (cls, title, meta, onClick) => {
+    const li = el('li');
+    li.appendChild(el('span', 'flag ' + cls));
+    const g = el('div', 'grow');
+    const b = el('button', 'title', title); b.type = 'button'; if (onClick) b.addEventListener('click', onClick); else b.disabled = true;
+    g.append(b, el('span', 'meta', meta));
+    li.appendChild(g); ul.appendChild(li);
+  };
+  if (!linkUp) add('amber', 'Lost connection to JARVIS', 'Retrying. Check the Terminal window is still open.');
+  RAW.accounts.filter(a => Object.keys(a.errors || {}).length).forEach(a =>
+    add('red', `${a.email} needs attention`, Object.entries(a.errors).map(([k, v]) => `${k}: ${v}`).join(' · '), openAccounts));
+  if (G) {
+    G.conflicts.forEach(l => add('red', `Double-booked: ${l.a.e.title} and ${l.b.e.title}`,
+      `${l.who.join(', ')} · ${dayName(l.b.s)} ${fmtT(l.b.s)} · ${l.minutes} min overlap`, () => openEvent(l.b.key)));
+    G.tight.forEach(l => add('amber', `Tight: ${l.a.e.title} → ${l.b.e.title}`,
+      `${l.who.join(', ')} · ${dayName(l.b.s)} · ${l.gap} min to get from ${String(l.a.e.location).split(',')[0]} to ${String(l.b.e.location).split(',')[0]}`, () => openEvent(l.b.key)));
+  }
+  if (!ul.children.length) ul.appendChild(el('li', 'empty', 'Nothing needs attention this week.'));
+}
+
+/* ---------- mail, tasks, files ---------- */
+function renderMail() {
+  const ul = $('mail'); ul.replaceChildren();
+  $('mail-hint').textContent = RAW.accounts.length > 1 ? `across ${plural(RAW.accounts.length, 'account')}` : '';
+  S.mail.threads.forEach(t => {
+    const li = el('li');
+    const dot = el('span', 'acct'); dot.style.background = accountColor(t.account); dot.title = t.account;
+    const g = el('div', 'grow');
+    g.append(safeLink(t.subject, t.url, 'title'), el('span', 'meta', t.from + (RAW.accounts.length > 1 ? ` · ${accountLabel(t.account)}` : '')));
+    const d = new Date(t.ts);
+    li.append(dot, g, el('span', 'when', dayIndex(t.ts) === 0 ? fmtT(t.ts) : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })));
+    ul.appendChild(li);
+  });
+  if (!ul.children.length) ul.appendChild(el('li', 'empty', RAW.accounts.length ? 'No unread mail. Nice.' : 'No account connected yet.'));
+}
+function renderTasks() {
+  const ul = $('tasks'); ul.replaceChildren();
+  S.tasks.forEach(t => {
+    const li = el('li');
+    const done = el('button', 'check'); done.type = 'button'; done.title = 'Mark done'; done.setAttribute('aria-label', 'Mark done: ' + t.text);
+    done.addEventListener('click', () => post('/api/tasks/delete', { id: t.id }).catch(() => say('Could not update that task. Is JARVIS still running?')));
+    li.append(done, el('span', 'grow title', t.text));
+    ul.appendChild(li);
+  });
+  if (!ul.children.length) ul.appendChild(el('li', 'empty', 'No open tasks.'));
+}
+function mimeTag(m) {
+  return /folder/.test(m) ? 'DIR' : /spreadsheet/.test(m) ? 'XLS' : /document/.test(m) ? 'DOC' : /presentation/.test(m) ? 'PPT' : /pdf/.test(m) ? 'PDF' : 'FILE';
+}
+function renderFiles() {
+  const ul = $('drive'); ul.replaceChildren();
+  S.files.forEach(f => {
+    const li = el('li');
+    const g = el('div', 'grow');
+    g.append(safeLink(f.name, f.url, 'title'), el('span', 'meta', `Edited ${dayName(new Date(f.modified).getTime())}${RAW.accounts.length > 1 ? ' · ' + accountLabel(f.account) : ''}`));
+    li.append(el('span', 'ico', mimeTag(f.mime || '')), g);
+    ul.appendChild(li);
+  });
+  if (!ul.children.length) ul.appendChild(el('li', 'empty', RAW.accounts.length ? 'No recent files.' : 'No account connected yet.'));
+}
+function renderFoot() {
+  const f = $('host'); f.replaceChildren();
+  if (!SYS) return;
+  const nextIn = Math.max(0, Math.round((SYS.nextAt - Date.now()) / 60000));
+  [
+    SYS.syncedAt ? `Last synced ${fmtT(SYS.syncedAt)}` : 'Waiting for first sync',
+    `Next automatic sync in ${durText(nextIn)}`,
+    `This computer: CPU ${SYS.cpu}% · memory ${SYS.mem}%`,
+    RAW ? plural(RAW.accounts.length, 'account') + ' connected' : '',
+  ].filter(Boolean).forEach(t => f.appendChild(el('span', '', t)));
+}
+
+function renderAll() {
+  if (!RAW) return;
+  $('demo').hidden = !RAW.demo;
+  renderTop(); renderBriefing(); renderToggles(); renderTimeline(); renderUpcoming();
+  renderAttention(); renderMail(); renderTasks(); renderFiles(); renderFoot();
+}
+
+/* ---------- drawer ---------- */
+let lastFocus = null;
+function openDrawer(build) {
+  lastFocus = document.activeElement;
+  const body = $('drawer-body'); body.replaceChildren();
+  build(body);
+  $('drawer').hidden = false; $('scrim').hidden = false;
+  $('drawer-close').focus();
+}
+function closeDrawer() {
+  $('drawer').hidden = true; $('scrim').hidden = true;
+  if (lastFocus && lastFocus.focus) lastFocus.focus();
+}
+$('drawer-close').addEventListener('click', closeDrawer);
+$('scrim').addEventListener('click', closeDrawer);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('drawer').hidden) closeDrawer(); });
+
+function fact(icon, content) {
+  const d = el('div', 'fact'); d.appendChild(el('span', '', icon));
+  const c = el('span'); if (typeof content === 'string') c.textContent = content; else c.appendChild(content);
+  d.appendChild(c); return d;
+}
+function openEvent(key) {
+  const x = allEvents().find(v => v.key === key);
+  if (!x) return;
+  openDrawer(body => {
+    const h = el('h2', '', x.e.title); h.id = 'drawer-title'; body.appendChild(h);
+    const mins = Math.round((x.en - x.s) / 60000);
+    body.appendChild(el('p', 'when', x.e.allDay ? `${longDay(x.s)} · all day` : `${dayName(x.s)}, ${longDay(x.s).split(', ').slice(1).join(', ')} · ${fmtT(x.s)} – ${fmtT(x.en)} (${durText(mins)})`));
+    const cal = el('div', 'cal'); cal.style.setProperty('--c', x.c.color);
+    cal.append(el('i'), document.createTextNode(`${x.c.label}${x.c.primary ? '' : ' · ' + x.c.account}`));
+    body.appendChild(cal);
+
+    if (x.e.location) {
+      const a = el('a', '', x.e.location); a.href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(x.e.location);
+      a.target = '_blank'; a.rel = 'noopener noreferrer';
+      body.appendChild(fact('📍', a));
+    }
+    if (x.e.attendees && x.e.attendees.length) body.appendChild(fact('👥', x.e.attendees.map(a => a.name || a.email).join(', ')));
+    if (x.e.meet) body.appendChild(fact('🎥', safeLink('Join Google Meet', x.e.meet)));
+
+    const f = flags(key);
+    if (f.red.length || f.amber.length) {
+      body.appendChild(el('h3', '', 'Needs attention'));
+      f.red.forEach(l => {
+        const o = l.a.key === key ? l.b : l.a;
+        const n = el('div', 'note red');
+        n.appendChild(el('b', '', `Double-booked with ${o.e.title}`));
+        n.appendChild(document.createTextNode(`${l.who.join(', ')} ${l.who.length > 1 || l.who[0] === 'You' ? 'are' : 'is'} in both. They overlap by ${l.minutes} min. `));
+        const go = el('button', '', 'Open ' + o.e.title); go.type = 'button'; go.addEventListener('click', () => openEvent(o.key));
+        n.appendChild(go); body.appendChild(n);
+      });
+      f.amber.forEach(l => {
+        const before = l.b.key === key, o = before ? l.a : l.b;
+        const n = el('div', 'note amber');
+        n.appendChild(el('b', '', before ? `Only ${l.gap} min after ${o.e.title}` : `Only ${l.gap} min before ${o.e.title}`));
+        n.appendChild(document.createTextNode(`${l.who.join(', ')} must get from ${String(l.a.e.location).split(',')[0]} to ${String(l.b.e.location).split(',')[0]}. `));
+        const go = el('button', '', 'Open ' + o.e.title); go.type = 'button'; go.addEventListener('click', () => openEvent(o.key));
+        n.appendChild(go); body.appendChild(n);
+      });
+    }
+
+    if (!x.e.allDay) {
+      // Only events that involve the same people: your own calendars together, or a shared attendee.
+      const people = new Set((x.e.attendees || []).map(a => a.email));
+      const related = v => (x.c.primary && v.c.primary) || (v.e.attendees || []).some(a => people.has(a.email))
+        || (!x.c.primary && !people.size && v.c.id === x.c.id);
+      const same = allEvents().filter(v => !v.e.allDay && sod(v.s) === sod(x.s) && v.key !== key && related(v));
+      const prev = same.filter(v => v.en <= x.s).pop(), next = same.find(v => v.s >= x.en);
+      if (prev || next) {
+        body.appendChild(el('h3', '', 'Around it'));
+        const ul = el('ul', 'rows');
+        [[prev, 'Before'], [next, 'After']].forEach(([v, label]) => {
+          if (!v) return;
+          const gap = Math.round((label === 'Before' ? x.s - v.en : v.s - x.en) / 60000);
+          const li = el('li'); const g = el('div', 'grow');
+          const b = el('button', 'title', v.e.title); b.type = 'button'; b.addEventListener('click', () => openEvent(v.key));
+          g.append(b, el('span', 'meta', `${label} · ${fmtT(v.s)}–${fmtT(v.en)} · ${gap ? durText(gap) + ' gap' : 'back to back'} · ${v.c.label}`));
+          li.appendChild(g); ul.appendChild(li);
+        });
+        body.appendChild(ul);
+      }
+    }
+
+    const acts = el('div', 'actions');
+    if (/^https:\/\//.test(x.e.link || '')) acts.appendChild(safeLink('Open in Google Calendar', x.e.link, 'btn primary'));
+    const web = el('a', 'btn', 'See it on the week web'); web.href = '#web'; web.addEventListener('click', closeDrawer);
+    acts.appendChild(web);
+    body.appendChild(acts);
+  });
+}
+function openAccounts() {
+  openDrawer(body => {
+    const h = el('h2', '', 'Accounts'); h.id = 'drawer-title'; body.appendChild(h);
+    body.appendChild(el('p', 'when', 'JARVIS reads these Google accounts. It can see calendars, mail and Drive file names, and cannot change anything.'));
+    const ul = el('ul', 'rows');
+    RAW.accounts.forEach(a => {
+      const errs = Object.entries(a.errors || {});
+      const li = el('li');
+      const dot = el('span', 'acct'); dot.style.background = accountColor(a.email);
+      const g = el('div', 'grow');
+      g.append(el('span', 'title', a.email), el('span', 'meta', errs.length ? errs.map(([k, v]) => `${k}: ${v}`).join(' · ') : 'Working'));
+      li.append(dot, g);
+      if (!RAW.demo) {
+        const rm = el('button', 'x', 'Disconnect'); rm.type = 'button';
+        let armed = false;
+        rm.addEventListener('click', () => {
+          if (!armed) { armed = true; rm.textContent = 'Click again to disconnect'; setTimeout(() => { armed = false; rm.textContent = 'Disconnect'; }, 4000); return; }
+          post('/auth/remove', { email: a.email }).then(closeDrawer).catch(() => say('Could not disconnect that account.'));
+        });
+        li.appendChild(rm);
+      }
+      ul.appendChild(li);
+    });
+    if (!RAW.accounts.length) ul.appendChild(el('li', 'empty', 'No accounts connected yet.'));
+    body.appendChild(ul);
+    const acts = el('div', 'actions');
+    if (RAW.demo) acts.appendChild(el('p', 'when', 'Demo mode. Start JARVIS without DEMO=1 to connect real accounts.'));
+    else if (!RAW.configured) acts.appendChild(el('p', 'when', 'Google sign-in is not set up yet. Put the client_secret JSON file from Google Cloud in the jarvis folder and restart.'));
+    else { const a = el('a', 'btn primary', '+ Connect a Google account'); a.href = '/auth/google'; acts.appendChild(a); }
+    body.appendChild(acts);
+    if (RAW.calendars.length) {
+      body.appendChild(el('h3', '', 'Calendars'));
+      const cl = el('ul', 'rows');
+      RAW.calendars.forEach(c => {
+        const li = el('li'); const dot = el('span', 'acct'); dot.style.background = c.color;
+        const g = el('div', 'grow'); g.append(el('span', 'title', c.label), el('span', 'meta', `${c.account}${hidden.has(c.id) ? ' · hidden' : ''}`));
+        li.append(dot, g); cl.appendChild(li);
+      });
+      body.appendChild(cl);
+    }
+  });
+}
+$('acct-btn').addEventListener('click', openAccounts);
+
+/* ---------- refresh ---------- */
+$('refresh').addEventListener('click', async () => {
+  const b = $('refresh'); b.disabled = true; b.textContent = 'Refreshing…';
+  try { await post('/api/refresh'); say('Pulled fresh data from Google.'); }
+  catch (e) { say('Could not refresh. Is JARVIS still running in Terminal?'); }
+  b.disabled = false; b.textContent = 'Refresh';
+});
+
+/* ---------- live link ---------- */
+let first = true;
+const es = new EventSource('/api/stream');
+es.onopen = () => { linkUp = true; renderTop(); if (RAW) renderAttention(); };
+es.onerror = () => { linkUp = false; renderTop(); if (RAW) renderAttention(); };
+es.addEventListener('snapshot', ev => {
+  RAW = normalise(JSON.parse(ev.data));
+  applyView(); renderAll();
   if (first) {
     first = false;
-    if (S.demo) say('Good day. Running on demo data. Ask me about the schedule, mail, files or tasks.');
-    else if (!S.accounts.length) say('Good day. Connect a Google account to bring your calendar, mail and files online.');
-    else say(`Good day. ${S.accounts.length} account${S.accounts.length > 1 ? 's' : ''} online. ${S.mail.unread} unread messages.`);
+    say(RAW.demo ? 'Running on demo data. Ask me about your schedule, cleans, mail or tasks.'
+      : !RAW.accounts.length ? 'Connect a Google account to get started.'
+        : 'Ready. Ask me about your day, or tap a suggestion below.');
   }
 });
-es.addEventListener('sys', ev => { SYS = JSON.parse(ev.data); renderSys(); tickSync(); });
-
-/* ---------- clock ---------- */
-function tick() {
-  const d = new Date();
-  $('clock').textContent = `${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`;
-  $('date').textContent = d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-  tickSync();
-}
-tick();
-setInterval(tick, 1000);
-setInterval(() => { if (S) { renderCals(); renderAlerts(); } }, 30000); // NOW / SOON markers move with the clock
+es.addEventListener('sys', ev => { SYS = JSON.parse(ev.data); renderTop(); renderFoot(); });
+setInterval(() => { if (RAW) { G = window.JarvisWeb ? window.JarvisWeb.buildGraph(S, Date.now()) : G; renderAll(); } }, 30000);
 
 /* ---------- tasks ---------- */
 $('tf').addEventListener('submit', e => {
   e.preventDefault();
-  const v = $('ti').value.trim();
-  if (!v) return;
-  post('/api/tasks', { text: v }).then(() => { $('ti').value = ''; }).catch(() => say('Could not save that task. Check the server is running.'));
+  const v = $('ti').value.trim(); if (!v) return;
+  post('/api/tasks', { text: v }).then(() => { $('ti').value = ''; }).catch(() => say('Could not save that task. Is JARVIS still running?'));
 });
 
-/* ---------- voice and commands ---------- */
-let voiceOn = false, typing;
+/* ---------- ask, voice ---------- */
+let typing, voiceOn = !!store('jarvis-voice');
 function say(msg) {
   const box = $('say'); clearTimeout(typing); let i = 0; box.textContent = '';
-  (function n() { box.textContent = msg.slice(0, ++i); if (i < msg.length) typing = setTimeout(n, 12); })();
+  (function n() { box.textContent = msg.slice(0, ++i); if (i < msg.length) typing = setTimeout(n, 10); })();
   if (voiceOn && 'speechSynthesis' in window) {
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(msg);
@@ -242,23 +590,14 @@ function say(msg) {
 }
 async function run(q) {
   say('Thinking…');
-  try { say((await post('/api/ask', { q })).text); }
-  catch (e) { say('I could not reach the JARVIS server.'); }
+  try { say((await post('/api/ask', { q })).text); } catch (e) { say('I could not reach the JARVIS server.'); }
 }
-['schedule', 'cleaning', 'conflicts', 'mail', 'files', 'tasks', 'report'].forEach(c => {
-  const b = el('button', '', c); b.type = 'button'; b.addEventListener('click', () => run(c)); $('chips').appendChild(b);
-});
-const focusBtn = el('button', '', 'focus today'); focusBtn.type = 'button';
-focusBtn.addEventListener('click', () => run('What should I focus on today?'));
-$('chips').appendChild(focusBtn);
+[['What\'s next?', 'schedule'], ['Cleans', 'cleaning'], ['Double-bookings', 'conflicts'], ['Mail', 'mail'], ['Tasks', 'tasks'], ['Status report', 'report'], ['Focus today', 'What should I focus on today?']]
+  .forEach(([label, q]) => { const b = el('button', '', label); b.type = 'button'; b.addEventListener('click', () => run(q)); $('chips').appendChild(b); });
 $('f').addEventListener('submit', e => { e.preventDefault(); const v = $('q').value.trim(); if (v) { run(v); $('q').value = ''; } });
-
 if ('speechSynthesis' in window) {
-  const b = $('voice'); b.hidden = false;
-  b.addEventListener('click', () => {
-    voiceOn = !voiceOn; b.setAttribute('aria-pressed', voiceOn); b.textContent = 'VOICE: ' + (voiceOn ? 'ON' : 'OFF');
-    if (!voiceOn) speechSynthesis.cancel();
-  });
+  $('voice-wrap').hidden = false; $('voice').checked = voiceOn;
+  $('voice').addEventListener('change', () => { voiceOn = $('voice').checked; store('jarvis-voice', voiceOn); if (!voiceOn) speechSynthesis.cancel(); });
 }
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 if (SR) {
@@ -267,10 +606,7 @@ if (SR) {
   let listening = false;
   rec.onresult = ev => { $('q').value = Array.from(ev.results).map(r => r[0].transcript).join(' '); };
   rec.onstart = () => { listening = true; m.setAttribute('aria-pressed', 'true'); };
-  rec.onend = () => {
-    listening = false; m.setAttribute('aria-pressed', 'false');
-    const v = $('q').value.trim(); if (v) { $('q').value = ''; run(v); }
-  };
-  rec.onerror = ev => { if (ev.error === 'not-allowed') say('Microphone access was blocked. Allow it in the browser to dictate.'); };
-  m.addEventListener('click', () => { if (listening) rec.stop(); else { try { rec.start(); } catch (e) { /* already running */ } } });
+  rec.onend = () => { listening = false; m.setAttribute('aria-pressed', 'false'); const v = $('q').value.trim(); if (v) { $('q').value = ''; run(v); } };
+  rec.onerror = ev => { if (ev.error === 'not-allowed') say('Microphone access is blocked. Allow it in Chrome to dictate.'); };
+  m.addEventListener('click', () => { if (listening) rec.stop(); else { try { rec.start(); } catch (e) { /* already listening */ } } });
 }

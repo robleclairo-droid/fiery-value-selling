@@ -30,7 +30,7 @@
     const days = S.windowDays || 7;
     const t0 = sod(now);
     const calendars = (S.calendars || []).map((c, i) => ({
-      id: c.id, name: c.primary ? (c.account || c.name) : c.name, primary: !!c.primary, color: PALETTE[i % PALETTE.length],
+      id: c.id, name: c.label || (c.primary ? (c.account || c.name) : c.name), primary: !!c.primary, color: c.color || PALETTE[i % PALETTE.length],
     }));
     const events = [];
     (S.calendars || []).forEach((c, ci) => (c.events || []).forEach(e => {
@@ -130,6 +130,7 @@
   }
 
   if (typeof module !== 'undefined' && module.exports) { module.exports = { buildGraph, placeKey }; return; }
+  window.JarvisWeb = { buildGraph, placeKey, PALETTE };
 
   /* ================= browser UI ================= */
   const $ = id => document.getElementById(id);

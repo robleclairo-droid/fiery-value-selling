@@ -39,7 +39,7 @@ function createApp(env = process.env) {
     host: env.HOST || '127.0.0.1',
     clientId: env.GOOGLE_CLIENT_ID || '',
     clientSecret: env.GOOGLE_CLIENT_SECRET || '',
-    pollSeconds: Math.max(15, Number(env.POLL_SECONDS) || 60),
+    pollSeconds: Math.max(15, Number(env.POLL_SECONDS) || 4 * 3600), // default: every 4 hours
     demo: env.DEMO === '1',
     password: env.JARVIS_PASSWORD || '',
     anthropicKey: env.ANTHROPIC_API_KEY || '',
@@ -47,6 +47,9 @@ function createApp(env = process.env) {
     tz: env.JARVIS_TZ || Intl.DateTimeFormat().resolvedOptions().timeZone,
     hideCalendars: new RegExp(env.JARVIS_HIDE_CALENDARS || 'holiday|transferred from', 'i'),
     windowDays: Math.min(30, Math.max(1, Number(env.CALENDAR_DAYS) || 7)),
+    // "calendar-id=Name,other-id=Other" renames calendars on screen
+    calNames: Object.fromEntries(String(env.JARVIS_CALENDAR_NAMES || '').split(',').map(p => p.split('='))
+      .filter(p => p.length === 2 && p[0].trim() && p[1].trim()).map(([k, v]) => [k.trim().toLowerCase(), v.trim()])),
     myEmails: String(env.JARVIS_MY_EMAILS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean),
   };
   cfg.base = (env.BASE_URL || `http://localhost:${cfg.port}`).replace(/\/$/, '');
@@ -111,6 +114,13 @@ function createApp(env = process.env) {
 
   const enc = encodeURIComponent;
 
+  function calLabel(id, primary, name, email) {
+    const custom = cfg.calNames[String(id).toLowerCase()];
+    if (custom) return custom;
+    if (!primary) return name;
+    return /@(gmail|googlemail)\.com$/i.test(email) ? 'Personal' : String(email).split('@')[1] || name;
+  }
+
   function slimEvent(e) {
     const start = (e.start && (e.start.dateTime || e.start.date)) || null;
     const end = (e.end && (e.end.dateTime || e.end.date)) || null;
@@ -136,6 +146,8 @@ function createApp(env = process.env) {
       const ev = await gget(email, `${U.cal}/calendars/${enc(c.id)}/events?${q}`);
       return {
         id: c.id, name: c.summaryOverride || c.summary || c.id, primary: !!c.primary,
+        label: calLabel(c.id, !!c.primary, c.summaryOverride || c.summary || c.id, email),
+        color: /^#[0-9a-f]{6}$/i.test(c.backgroundColor || '') ? c.backgroundColor : '',
         events: (ev.items || []).filter(e => e.status !== 'cancelled').map(slimEvent),
       };
     }));
@@ -245,9 +257,9 @@ function createApp(env = process.env) {
     };
     const FIFTH = '137 Fifth Ave', GRAHAM = '13326 Graham Rd', COOP = 'Co-operators office, Talbot St';
     return {
-      accounts: [{ email: 'demo@example.com', errors: {} }],
+      accounts: [{ email: 'demo@example.com', errors: {} }, { email: 'demo.personal@gmail.com', errors: {} }],
       calendars: [
-        { id: 'demo@example.com', name: 'demo@example.com', primary: true, account: 'demo@example.com', events: [
+        { id: 'demo@example.com', name: 'demo@example.com', label: 'example.com', color: '#4fa3ff', primary: true, account: 'demo@example.com', events: [
           ev('Team stand-up', 0, 9, 0, 15, '', ['jac', 'mau']),
           ev('Client call: product demo', 0, 11, 30, 45, '', ['ravi']),
           ev('Lunch with Dana', 0, 12, 0, 60, 'Railway City Brewing', ['dana']),
@@ -259,7 +271,11 @@ function createApp(env = process.env) {
           ev('Kids gymnastics', 4, 17, 15, 60, '24 Alexandria Ave', ['meg']),
           ev('Team meeting', 5, 11, 0, 45, '', ['jac', 'mau']),
         ] },
-        { id: 'clean', name: 'Cleaning Schedule', primary: false, account: 'demo@example.com', events: [
+        { id: 'demo.personal@gmail.com', name: 'demo.personal@gmail.com', label: 'Personal', color: '#b48cff', primary: true, account: 'demo.personal@gmail.com', events: [
+          ev('Dentist', 1, 8, 0, 45, '420 Talbot St'),
+          ev('Date night', 4, 19, 30, 120, 'Railway City Brewing', ['meg']),
+        ] },
+        { id: 'clean', name: 'Cleaning Schedule', label: 'Cleaning Schedule', color: '#33c48d', primary: false, account: 'demo@example.com', events: [
           ev('House clean, Fifth Ave', 0, 9, 30, 120, FIFTH, ['jac']),
           ev('Office clean', 0, 11, 0, 90, COOP, ['mau']),
           ev('House clean, Graham Rd', 0, 12, 45, 120, GRAHAM, ['mau']),
@@ -269,10 +285,11 @@ function createApp(env = process.env) {
           ev('House clean, Fifth Ave', 6, 9, 30, 120, FIFTH, ['jac']),
         ] },
       ],
-      mail: { unread: 3, threads: [
+      mail: { unread: 4, threads: [
         { id: '1', subject: 'Quote for Friday', from: 'Dana Smith', fromEmail: 'dana@example.com', ts: Date.now() - 36e5, url: '', account: 'demo@example.com' },
         { id: '2', subject: 'Demo date confirmed', from: 'Ravi (OEM)', fromEmail: 'ravi@example.com', ts: Date.now() - 5 * 36e5, url: '', account: 'demo@example.com' },
         { id: '3', subject: 'Invoice approved', from: 'Finance', fromEmail: 'finance@example.com', ts: Date.now() - 30 * 36e5, url: '', account: 'demo@example.com' },
+        { id: '4', subject: 'Registration confirmed: Winter Kindergym', from: 'St. Thomas Elgin Gymnastics', fromEmail: 'club@example.com', ts: Date.now() - 3 * 36e5, url: '', account: 'demo.personal@gmail.com' },
       ] },
       files: [
         { id: 'f1', name: 'Q1 pipeline', mime: 'application/vnd.google-apps.spreadsheet', modified: at(-1, 16), url: '', account: 'demo@example.com' },
@@ -506,6 +523,8 @@ function createApp(env = process.env) {
           res.write('retry: 3000\n\n');
           clients.add(res);
           res.on('close', () => clients.delete(res));
+          // Someone just opened JARVIS: pull fresh data if the last sync is over 5 minutes old.
+          if (!sys.syncedAt || Date.now() - sys.syncedAt > 5 * 60e3) refresh();
           send(res, 'snapshot', state);
           send(res, 'sys', sysInfo());
           return;
@@ -542,7 +561,7 @@ function createApp(env = process.env) {
           if (!q) return json(res, 400, { error: 'empty' });
           return json(res, 200, { text: await ask(q) });
         }
-        if (p === '/api/refresh') { refresh(); return json(res, 200, { ok: true }); }
+        if (p === '/api/refresh') { await refresh(); return json(res, 200, { ok: true, syncedAt: sys.syncedAt }); }
         if (p === '/auth/remove') {
           const email = String(body.email || '').toLowerCase();
           if (!store.accounts[email]) return json(res, 404, { error: 'unknown' });

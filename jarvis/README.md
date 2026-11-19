@@ -1,17 +1,20 @@
 # JARVIS HUD
 
-A live heads-up display for your Google Calendar, Gmail and Google Drive. It shows every calendar from every account you connect, including your cleaning schedule and your Fiery calendar. Changes reach the screen within a minute, without a reload.
+A live heads-up display for your Google Calendar, Gmail and Google Drive. It shows every calendar from every account you connect, including your cleaning schedule and your Fiery calendar. It checks Google every 4 hours, whenever you open the page, and when you click Refresh. Updates appear without a reload.
 
-- **Calendars:** one panel per calendar, from every connected Google account. Invitation copies of events from a calendar already on screen are removed, so a clean doesn't show twice.
+- **Briefing:** a plain-English summary of your day at the top, with four cards: what's next (with a countdown), today's events and cleans, unread mail, and anything that needs attention.
+- **Today:** a timeline with your own calendars in one lane and shared calendars (like the Cleaning Schedule) in another, a line at the current time, and double-bookings outlined in red.
+- **Coming up:** the rest of the week, grouped by day.
+- **Calendar toggles:** each calendar shows in its Google Calendar colour; click a calendar's chip to hide or show it everywhere. Your choice is remembered in that browser.
+- **Event details:** click any event for the time, place (with a map link), people, Meet link, what's before and after it, and why it's flagged.
 - **Mail:** unread inbox threads from all accounts, newest first.
 - **Files:** the most recently edited Drive files.
-- **Tasks:** stored on the server, so every open screen updates when you add or remove one.
+- **Tasks:** stored on the server, so every open screen updates when you add or tick one off.
 - **Web view** (the WEB tab, or `/#web`): every event this week laid out as a spider web. Each ring is a day, with today on the outside, and each spoke is an hour. People and places hang between the events they share. Two kinds of dependency are flagged:
   - **Overlap** (red): the same person, or you, is booked into two events at once. Two different crews cleaning two houses at the same time is not an overlap.
   - **Tight hand-off** (amber, dashed): the same person goes straight from one place to another with 45 minutes or less between them.
 
   Tap any dot to see everything it connects to. Drag people and places to untangle the web, scroll or use + / − to zoom, and filter people, places or the running order.
-- **Host status:** real CPU and memory of the machine running JARVIS, plus a countdown to the next sync.
 - **Ask JARVIS:** quick commands (`schedule`, `cleaning`, `mail`, `files`, `tasks`, `report`). With an Anthropic API key, it also answers free-form questions from your live data. Voice output and dictation use your browser's built-in speech.
 
 All Google access is **read-only**. JARVIS cannot send mail, change events or edit files.
@@ -87,10 +90,11 @@ All settings go in `jarvis/.env`. See `.env.example` for every option.
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| `POLL_SECONDS` | `60` | How often to pull from Google (minimum 15) |
+| `POLL_SECONDS` | `14400` (4 hours) | How often to pull from Google. It also pulls when you open the page (if the last pull is over 5 minutes old) and when you click Refresh |
 | `CALENDAR_DAYS` | `7` | Days of calendar to show |
 | `JARVIS_HIDE_CALENDARS` | `holiday\|transferred from` | Calendars to hide, matched on name |
 | `JARVIS_TZ` | system time zone | Time zone for spoken answers |
+| `JARVIS_CALENDAR_NAMES` | (none) | Rename calendars on screen, for example `you@luma.com=Luma`. A Gmail account's main calendar is called Personal, and other main calendars use the email's domain |
 | `JARVIS_MY_EMAILS` | (none) | Other addresses that are you (for example a personal Gmail), so they aren't shown as other people |
 
 ## Tests
