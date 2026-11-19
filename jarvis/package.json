@@ -1,0 +1,13 @@
+{
+  "name": "jarvis-hud",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Live JARVIS-style heads-up display for Google Calendar, Gmail and Drive",
+  "main": "server.js",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node server.js",
+    "demo": "DEMO=1 node server.js",
+    "test": "node --test"
+  }
+}
